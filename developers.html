@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Code To Profile | Runtime Conditions</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html"><span class="brand-mark">RC</span> Runtime Conditions</a>
+        <nav class="top-links" aria-label="Top links">
+          <a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md">Current Draft</a>
+          <a href="https://github.com/runtimeconditions/rc-demos/blob/main/README.md">Run Demo</a>
+          <a href="reference.html">Source Map</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="guide-layout">
+      <aside class="sidebar" aria-label="Guide chapters">
+        <p class="sidebar-title">Reader Guide</p>
+        <ol class="chapter-list">
+          <li><a href="index.html"><span class="num">00</span><span>Start here</span></a></li>
+          <li><a href="concepts.html"><span class="num">01</span><span>Core concepts</span></a></li>
+          <li><a href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
+          <li><a aria-current="page" href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
+          <li><a href="extensions.html"><span class="num">04</span><span>Extensions</span></a></li>
+          <li><a href="platform.html"><span class="num">05</span><span>Adapters</span></a></li>
+          <li><a href="demo.html"><span class="num">06</span><span>Run the demo</span></a></li>
+          <li><a href="reference.html"><span class="num">07</span><span>Reference</span></a></li>
+        </ol>
+      </aside>
+
+      <main class="content">
+        <p class="chapter-label">Chapter 3</p>
+        <h1 class="page-title">The generator turns source declarations into profile YAML.</h1>
+        <p class="intro">
+          This page follows the explicit declaration path in the Go demo. It uses real files from the split Runtime Conditions repos and shows enough surrounding code to make each step clear.
+        </p>
+
+        <section class="section">
+          <h2>1. The application imports declaration packages</h2>
+          <p class="short">The declarations are regular Go calls. They are intentionally no-op at runtime, but the generator can identify them in the AST.</p>
+          <div class="example">
+            <div class="example-title">
+              <span>apps/request-logger-http/conditions.go</span>
+              <a href="https://github.com/runtimeconditions/rc-demos/blob/main/apps/request-logger-http/conditions.go">source</a>
+            </div>
+            <pre><code>package main
+
+import (
+  common "github.com/runtimeconditions/extensions/common-integrations/go"
+  env "github.com/runtimeconditions/extensions/env-configuration/go"
+)</code></pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>2. The app declares the runtime integrations it expects</h2>
+          <p class="short">The API declaration names the catalog entry, the HTTP operation the workload calls, the expected response shape, and the environment variable the app reads.</p>
+          <div class="example">
+            <div class="example-title">
+              <span>apps/request-logger-http/conditions.go</span>
+              <a href="https://github.com/runtimeconditions/rc-demos/blob/main/apps/request-logger-http/conditions.go">source</a>
+            </div>
+            <pre><code>func declaration() {
+  common.API("todos-api",
+    common.Spec("openapi", "catalog://api/default/todos-api", "1.0.0"),
+    common.GET("/todos/{id}", common.Response[Todo]()),
+    env.Env("baseUrl", "TODOS_API_URL"),
+  )
+
+  common.Cache("request-cache",
+    common.KeyValue(common.Redis),
+    env.EnvAlternative(env.Env("url", "REDIS_URL")),
+    env.EnvAlternative(
+      env.Env("hostname", "REDIS_HOST"),
+      env.Env("port", "REDIS_PORT"),
+    ),
+  )
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>3. The app uses those env vars in normal runtime code</h2>
+          <p class="short">The profile records the names `TODOS_API_URL` and `REDIS_URL`; it does not provide their values. The adapter supplies those later.</p>
+          <div class="example">
+            <div class="example-title">
+              <span>apps/request-logger-http/main.go</span>
+              <a href="https://github.com/runtimeconditions/rc-demos/blob/main/apps/request-logger-http/main.go">source</a>
+            </div>
+            <pre><code>func checkTodosAPI(ctx context.Context) error {
+  baseURL := strings.TrimRight(os.Getenv("TODOS_API_URL"), "/")
+  if baseURL == "" {
+    return errors.New("TODOS_API_URL is not set")
+  }
+
+  request, err := http.NewRequestWithContext(
+    ctx,
+    http.MethodGet,
+    baseURL+"/todos/1",
+    nil,
+  )
+  if err != nil {
+    return err
+  }
+  response, err := http.DefaultClient.Do(request)
+  if err != nil {
+    return fmt.Errorf("todos-api request failed: %w", err)
+  }
+  defer response.Body.Close()
+  return nil
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>4. The declaration helpers themselves do nothing at runtime</h2>
+          <p class="short">This keeps application behavior unchanged. The generator reads calls to these functions; the compiled service just receives inert values.</p>
+          <div class="example">
+            <div class="example-title">
+              <span>common-integrations/go/declarations.go</span>
+              <a href="https://github.com/runtimeconditions/extensions/blob/main/common-integrations/go/declarations.go">source</a>
+            </div>
+            <pre><code>// API declares an external API dependency.
+func API(name string, options ...APIOption) Declaration {
+  return Declaration{}
+}
+
+// Cache declares a cache dependency.
+func Cache(name string, options ...CacheOption) Declaration {
+  return Declaration{}
+}</code></pre>
+          </div>
+          <div class="example">
+            <div class="example-title">
+              <span>env-configuration/go/declarations.go</span>
+              <a href="https://github.com/runtimeconditions/extensions/blob/main/env-configuration/go/declarations.go">source</a>
+            </div>
+            <pre><code>type ConditionOption interface {
+  common.APIOption
+  common.DatastoreOption
+  common.CacheOption
+  envConfigurationConditionOption()
+}
+
+func Env(property, name string, options ...EnvOption) ConditionOption {
+  return conditionOption{}
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>5. Run the generator against the app directory</h2>
+          <p class="short">The generator parses the Go AST, finds the declaration calls, resolves their arguments, and emits a Runtime Conditions Profile.</p>
+          <div class="example">
+            <div class="example-title">Command</div>
+            <pre><code>cd go-rc-profiler
+go run . \
+  -dir ../rc-demos/apps/request-logger-http \
+  -name request-logger-http \
+  -workload-uri github.com/runtimeconditions/rc-demos/apps/request-logger-http \
+  -workload-version v0.1.0</code></pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>6. The generated profile contains the same requirements</h2>
+          <div class="example">
+            <div class="example-title">Generated profile excerpt, with full document shape</div>
+            <pre><code>apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsProfile
+
+metadata:
+  name: request-logger-http
+
+workload:
+  uri: github.com/runtimeconditions/rc-demos/apps/request-logger-http
+  version: v0.1.0
+
+extensions:
+  - https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+  - https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+
+conditions:
+  - name: todos-api
+    kind: api
+    interface:
+      type: http
+      spec:
+        format: openapi
+        uri: catalog://api/default/todos-api
+        version: 1.0.0
+      operations:
+        - method: GET
+          path: /todos/{id}
+    configuration:
+      env:
+        - property: baseUrl
+          name: TODOS_API_URL
+
+  - name: request-cache
+    kind: cache
+    interface:
+      type: key_value
+      engine: redis
+    configuration:
+      alternatives:
+        - env:
+            - property: url
+              name: REDIS_URL</code></pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>7. Java starts from Maven and Gradle artifacts</h2>
+          <p class="short">
+            The Java profiler discovers Runtime Conditions metadata from Maven and Gradle project layouts, resolved classpath directories, and JAR resources. It currently generates profiles from declarative Java binding packages; SDK/runtime package extraction is intentionally deferred.
+          </p>
+          <div class="example">
+            <div class="example-title">Java artifact resource layout</div>
+            <pre><code>META-INF/runtimeconditions/runtimeconditions.bindings.yaml
+META-INF/runtimeconditions/runtimeconditions.package.yaml
+META-INF/runtimeconditions/runtimeconditions.extension.yaml</code></pre>
+          </div>
+          <div class="example">
+            <div class="example-title">Profile generation command</div>
+            <pre><code>cd java-rc-profiler
+mvn -q package
+
+java -jar target/runtimeconditions-java-profiler-0.1.0-SNAPSHOT.jar generate \
+  --project src/testdata/declarative-app \
+  --classpath ../extensions/common-integrations/java:../extensions/env-configuration/java \
+  --name java-declarative-app \
+  --workload-uri example/java-declarative-app \
+  --workload-version test</code></pre>
+          </div>
+        </section>
+
+        <nav class="page-nav" aria-label="Page navigation">
+          <a href="spec.html">Previous: Profile shape</a>
+          <a href="extensions.html">Next: Extensions</a>
+        </nav>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>Chapter 3 of 7</span>
+        <a href="extensions.html">Continue</a>
+      </div>
+    </footer>
+    <script src="assets/syntax.js" defer></script>
+  </body>
+</html>
