@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Runtime Conditions Profile Guide</title>
-    <meta name="description" content="Example-led guide to the Runtime Conditions Profile specification and demo." />
+    <meta name="description" content="Why Runtime Conditions exists, and a complete profile example, in one place." />
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
   <body>
@@ -23,7 +23,7 @@
       <aside class="sidebar" aria-label="Guide chapters">
         <p class="sidebar-title">Reader Guide</p>
         <ol class="chapter-list">
-          <li><a aria-current="page" href="index.html"><span class="num">00</span><span>Start here</span></a></li>
+          <li><a aria-current="page" href="start.html"><span class="num">00</span><span>Start here</span></a></li>
           <li><a href="concepts.html"><span class="num">01</span><span>Core concepts</span></a></li>
           <li><a href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
           <li><a href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
@@ -43,6 +43,19 @@
         <div class="note">
           <p>Runtime Conditions is seeking adoption by an established parent project. These repositories are split for hands-on usability, review, demos, and implementation feedback; they are not intended to present Runtime Conditions as a standalone foundation or competing project.</p>
         </div>
+
+        <section class="section">
+          <h2>Why this exists</h2>
+          <p>
+            A developer's code needs ordinary things to work - somewhere to store files, somewhere to cache data, a way to call another team's API. None of that is unusual, and the code works fine wherever the developer first tries it. What's unusual is that this knowledge usually only lives in the developer's head, a Slack thread, or an outdated wiki page - never anywhere a machine can read it. So before anything can go live safely, a platform engineer has to dig through all of that by hand, piece it together, and set each need up separately: storage permissions here, a traffic rule there, a certificate somewhere else. Miss one, or get one slightly wrong, and nobody finds out until it's already broken in front of real users.
+          </p>
+          <p>
+            Then it has to happen all over again for the next environment - once for testing, once for the real thing - because none of it was ever connected back to a single source of truth.
+          </p>
+          <p>
+            A Runtime Conditions Profile writes that same intent down once, in plain, machine-readable form - "this needs storage," "this needs a cache," "this needs to call that API." The moment it's submitted, a check runs against it automatically, before the code ever gets a chance to run anywhere - so a missing or invalid requirement is rejected right there, with a clear reason, instead of shipping quietly and breaking later. Once it's accepted, every environment can read that same declaration and fulfill it on its own. Nobody re-derives the same fact by hand, differently, every time.
+          </p>
+        </section>
 
         <section class="section">
           <h2>The short version</h2>
@@ -113,15 +126,41 @@ conditions:
         </section>
 
         <section class="section">
+          <h2>Yes, it's different from Docker Compose</h2>
+          <p>
+            A lot of teams already write a <code>compose.yaml</code> to describe how their services fit together, so it's a fair question: isn't that the same thing?
+          </p>
+          <p>
+            Not quite. A <code>compose.yaml</code> describes a specific, already-decided implementation - this exact Postgres image, on this exact port, wired up this exact way. Someone reading it still has to reverse-engineer the actual intent behind it: does this really have to be Postgres, or would any relational database work? What about a dependency that has no image at all, like another team's API? You can fake it with a mock, but now whoever's reading your compose file has to guess what that mock is even standing in for.
+          </p>
+          <p>
+            A Runtime Conditions Profile goes the other way around. It never describes a specific implementation - it describes the plain intent: "this needs a cache." It's not tied to any one image, port, or vendor, which is exactly why a platform team can decide the real implementation later, and can change it without the developer rewriting anything. And because the intent is written down cleanly in one place, you could generate a <code>compose.yaml</code> from a Runtime Conditions Profile for local development. Going the other way - guessing a profile out of a compose file - is a lot harder, because the intent was never written down to begin with.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>How this fits with tools like Radius, Crossplane, and Kratix</h2>
+          <p>
+            There's a whole category of platform tools already doing real work here - Radius, Score, Porter, Crossplane, Sveltos, Kratix, and others. It's fair to ask where Runtime Conditions fits next to them.
+          </p>
+          <p>
+            The honest answer: it's less about being different from them, and more about how it fits into them. Every one of those tools starts from the same assumption - that you already know what a workload needs before you hand it to them. They're excellent at taking a known requirement and provisioning or wiring up the real thing. What none of them really solve is the step before that: capturing what a workload needs in the first place, in a plain, portable, machine-readable way, written down once by the person who actually knows the answer - the developer.
+          </p>
+          <p>
+            That's the gap a Runtime Conditions Profile fills. It's not a replacement for Radius or Kratix or any tool like them - it's the starting point they all assume you already have. A profile like "this needs storage," "this needs a cache," "this needs to call that API" is exactly the kind of input these tools are built to consume. Runtime Conditions isn't competing for the same job; it's producing the input that job has always needed someone to write down by hand.
+          </p>
+        </section>
+
+        <section class="section">
           <h2>Read in order</h2>
           <div class="two-col">
             <div class="mini-card">
               <h3>First half: what the profile is</h3>
-              <p>Read chapters 1-4 to understand Conditions, profile shape, generator output, and extension vocabulary.</p>
+              <p>Read chapters 2-5 to understand Conditions, profile shape, generator output, and extension vocabulary.</p>
             </div>
             <div class="mini-card">
               <h3>Second half: how it gets used</h3>
-              <p>Read chapters 5-7 to understand platform adapters, the working Kratix demo, and where each source file lives.</p>
+              <p>Read chapters 6-8 to understand platform adapters, the working Kratix demo, and where each source file lives.</p>
             </div>
           </div>
         </section>
