@@ -90,6 +90,19 @@
           </p>
         </section>
 
+        <section class="section">
+          <h2>How this fits with tools like Radius, Crossplane, and Kratix</h2>
+          <p>
+            There's a whole category of platform tools already doing real work here - Radius, Score, Porter, Crossplane, Sveltos, Kratix, and others. It's fair to ask where Runtime Conditions fits next to them.
+          </p>
+          <p>
+            The honest answer: it's less about being different from them, and more about how it fits into them. Every one of those tools starts from the same assumption - that you already know what a workload needs before you hand it to them. They're excellent at taking a known requirement and provisioning or wiring up the real thing. What none of them really solve is the step before that: capturing what a workload needs in the first place, in a plain, portable, machine-readable way, written down once by the person who actually knows the answer - the developer.
+          </p>
+          <p>
+            That's the gap a Runtime Conditions Profile fills. It's not a replacement for Radius or Kratix or any tool like them - it's the starting point they all assume you already have. Alice's profile - "this needs storage," "this needs a cache," "this needs to call that API" - is exactly the kind of input these tools are built to consume. Runtime Conditions isn't competing for the same job; it's producing the input that job has always needed someone to write down by hand.
+          </p>
+        </section>
+
         <nav class="page-nav" aria-label="Page navigation">
           <span></span>
           <a href="index.html">Next: Start here</a>
