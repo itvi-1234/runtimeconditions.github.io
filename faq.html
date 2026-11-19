@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FAQ | Runtime Conditions</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/theme.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html">Runtime Conditions</a>
+        <nav class="top-links" aria-label="Top links">
+          <a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md" data-tip="Read the latest draft of the specification"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h6"/></svg><span>Current Draft</span></a>
+          <a href="https://github.com/runtimeconditions/rc-demos/blob/main/README.md" data-tip="Run Runtime Conditions end to end on your own machine"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg><span>Run Demo</span></a>
+          <a href="reference.html" data-tip="See where each part of this guide comes from in the source repositories"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15"/><path d="M15 6v15"/></svg><span>Source Map</span></a>
+          <a href="https://github.com/runtimeconditions" data-tip="Browse the Runtime Conditions repositories on GitHub"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span>GitHub</span></a>
+          <a href="https://cloud-native.slack.com/archives/C0C0R4M65FZ" data-tip="Join the conversation on the CNCF Slack"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 9h16"/><path d="M4 15h16"/><path d="M10 3L8 21"/><path d="M16 3l-2 18"/></svg><span>Slack</span></a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="guide-layout">
+      <aside class="sidebar" aria-label="Guide chapters">
+        <p class="sidebar-title">Reader Guide</p>
+        <ol class="chapter-list">
+          <li><a href="index.html"><span class="num">00</span><span>Start here</span></a></li>
+          <li><a href="concepts.html"><span class="num">01</span><span>Core concepts</span></a></li>
+          <li><a href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
+          <li><a href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
+          <li><a href="extensions.html"><span class="num">04</span><span>Extensions</span></a></li>
+          <li><a href="cli.html"><span class="num">05</span><span>rc CLI</span></a></li>
+          <li><a href="platform.html"><span class="num">06</span><span>Adapters</span></a></li>
+          <li><a href="demo.html"><span class="num">07</span><span>Run the demo</span></a></li>
+          <li><a href="reference.html"><span class="num">08</span><span>Reference</span></a></li>
+          <li><a aria-current="page" href="faq.html"><span class="num">09</span><span>FAQ</span></a></li>
+        </ol>
+      </aside>
+
+      <main class="content">
+        <p class="chapter-label">Chapter 9</p>
+        <h1 class="page-title">Frequently asked questions.</h1>
+        <p class="intro">
+          Two questions that come up as soon as people see a profile.
+        </p>
+
+        <section class="section" id="compose">
+          <h2>How is this different from Docker Compose?</h2>
+          <p class="short">A <code>compose.yaml</code> says how an app is run today. A profile says what the app needs, so a platform team can decide how to provide it.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th></th><th><code>compose.yaml</code></th><th>Runtime Conditions Profile</th></tr></thead>
+              <tbody>
+<tr><td><strong>What it describes</strong></td><td>One chosen setup</td><td>The need behind it</td></tr>
+<tr><td><strong>Example</strong></td><td><code>postgres:16</code> on port 5432</td><td>"needs a relational database"</td></tr>
+<tr><td><strong>Another team's API, which has no image</strong></td><td>A mock, and readers must guess what it stands for</td><td>Declared as an API, with the operations the app calls</td></tr>
+<tr><td><strong>Who can change the real thing</strong></td><td>The developer rewrites the file</td><td>The platform team, without touching the app</td></tr>
+<tr><td><strong>Can you get one from the other?</strong></td><td>No. The intent was never written down</td><td>Yes. A <code>compose.yaml</code> could be generated from a profile</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="own-catalog">
+          <h2>Can a company write its own catalog of extensions?</h2>
+          <p class="short">
+            Yes. An extension is a YAML document with its own id, so a company can define its own, as the <a href="https://github.com/runtimeconditions/spec/tree/main/examples/extensions/aws-object-store">AWS Object Store</a> example does. Our first-party extensions are one catalog among others, in the <a href="https://github.com/runtimeconditions/extensions/tree/main/catalog">extensions repository</a>.
+          </p>
+          <ol class="step-list">
+            <li><span class="step-num">1</span><div><strong>Write an extension.</strong><span>A YAML definition of the kinds, interface types, fields, and allowed values your company needs, with JSON Schema to check them.</span></div></li>
+            <li><span class="step-num">2</span><div><strong>Build on the existing ones.</strong><span>Depend on an extension that already owns a word instead of defining it again. An extension owns only what it introduces.</span></div></li>
+            <li><span class="step-num">3</span><div><strong>Generate bindings.</strong><span><code>rc bindings generate</code> turns the extension into packages for Go, Python, TypeScript, and Java.</span></div></li>
+            <li><span class="step-num">4</span><div><strong>Publish it.</strong><span>Put the packages in your registries and the definition at its id. A profile lists the id, and tools find the definition there, or in a local catalog directory.</span></div></li>
+          </ol>
+          <p class="short">
+            The rules for writing one are in the <a href="https://github.com/runtimeconditions/spec/blob/main/docs/guides/extension-authoring.md">extension authoring guide</a>, and <a href="extensions.html">Extensions</a> shows what an extension owns.
+          </p>
+        </section>
+
+        <nav class="page-nav" aria-label="Page navigation">
+          <a href="reference.html">Previous: Reference</a>
+          <a href="index.html">Back to start</a>
+        </nav>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>Chapter 9 of 9</span>
+        <a href="index.html">Restart guide</a>
+      </div>
+    </footer>
+    <script src="assets/syntax.js" defer></script>
+  </body>
+</html>

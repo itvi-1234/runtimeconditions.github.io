@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Profile Shape | Runtime Conditions</title>
     <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/theme.js"></script>
   </head>
   <body>
     <header class="site-header">
@@ -29,24 +30,66 @@
           <li><a aria-current="page" href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
           <li><a href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
           <li><a href="extensions.html"><span class="num">04</span><span>Extensions</span></a></li>
-          <li><a href="platform.html"><span class="num">05</span><span>Adapters</span></a></li>
-          <li><a href="demo.html"><span class="num">06</span><span>Run the demo</span></a></li>
-          <li><a href="reference.html"><span class="num">07</span><span>Reference</span></a></li>
+          <li><a href="cli.html"><span class="num">05</span><span>rc CLI</span></a></li>
+          <li><a href="platform.html"><span class="num">06</span><span>Adapters</span></a></li>
+          <li><a href="demo.html"><span class="num">07</span><span>Run the demo</span></a></li>
+          <li><a href="reference.html"><span class="num">08</span><span>Reference</span></a></li>
+          <li><a href="faq.html"><span class="num">09</span><span>FAQ</span></a></li>
         </ol>
       </aside>
 
       <main class="content">
         <p class="chapter-label">Chapter 2</p>
-        <h1 class="page-title">The core spec defines the document contract.</h1>
+        <h1 class="page-title">What a profile looks like.</h1>
         <p class="intro">
-          Core fields are stable. Concrete values such as `cache`, `redis`, and `aws.s3` come from extensions.
+          A profile is one YAML file with a few fixed fields. The words you put in them, such as <code>cache</code>, <code>redis</code>, and <code>aws.s3</code>, come from <a href="extensions.html">extensions</a>.
         </p>
+
+        <section class="section" id="complete-profile">
+          <h2>A complete profile</h2>
+          <div class="example">
+            <div class="example-title">One app, one cache Condition</div>
+            <pre><code>apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsProfile
+
+metadata:
+  name: request-logger-http
+
+workload:
+  uri: github.com/runtimeconditions/rc-demos/apps/request-logger-http
+  version: v0.1.0
+
+extensions:
+  - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
+  - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha2
+
+conditions:
+  - name: request-cache
+    kind: cache
+    interface:
+      type: key_value
+      engine: redis
+    configuration:
+      alternatives:
+        - env:
+            - property: url
+              name: REDIS_URL
+        - env:
+            - property: hostname
+              name: REDIS_HOST
+            - property: port
+              name: REDIS_PORT</code></pre>
+          </div>
+          <p class="short">
+            This profile says that the request logger needs a Redis cache, and that it reads where to find it from <code>REDIS_URL</code>, or from <code>REDIS_HOST</code> and <code>REDIS_PORT</code>. It does not say where Redis runs or what its password is. The platform decides that. Wondering how a profile like this is generated? See <a href="developers.html#declare">Code to profile</a>. The sections below take it apart.
+          </p>
+        </section>
 
         <section class="section">
           <h2>Envelope</h2>
           <div class="example">
             <div class="example-title">
-              <span>Required top-level fields</span>
+              <span>The top-level fields of the profile above</span>
               <a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md">full draft</a>
             </div>
             <pre><code>apiVersion: runtimeconditions.io/v1alpha1
@@ -59,8 +102,22 @@ workload:
   uri: github.com/runtimeconditions/rc-demos/apps/request-logger-http
   version: v0.1.0
 
-extensions: []
-conditions: []</code></pre>
+extensions:
+  # the words the conditions use, see Extension declaration
+conditions:
+  # the needs, see Condition shape</code></pre>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Part</th><th>What it says</th></tr></thead>
+              <tbody>
+<tr><td><a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#32-top-level-fields"><code>apiVersion</code>, <code>kind</code></a></td><td>Which kind of document this is.</td></tr>
+<tr><td><a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#33-metadata"><code>metadata</code></a></td><td>The profile's name.</td></tr>
+<tr><td><a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#34-workload"><code>workload</code></a></td><td>Which app it describes: where it comes from and its version.</td></tr>
+<tr><td><a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#52-extension-declarations"><code>extensions</code></a></td><td>Where the words used in the conditions come from.</td></tr>
+<tr><td><a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#4-condition-model"><code>conditions</code></a></td><td>The list of needs.</td></tr>
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -69,33 +126,76 @@ conditions: []</code></pre>
           <div class="example">
             <div class="example-title">Core owns structure; extensions own values</div>
             <pre><code>conditions:
-  - name: optional-condition-name
-    optional: false
-    kind: extension-defined-kind
+  - name: request-cache      # an optional name
+    kind: cache              # a core field, with a value from an extension
     interface:
-      type: extension-defined-interface-type</code></pre>
+      type: key_value        # a core field, with a value from an extension
+      engine: redis          # a field an extension owns
+    configuration:           # a field an extension owns
+      alternatives: ...      # REDIS_URL, or REDIS_HOST and REDIS_PORT</code></pre>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Part</th><th>What it says</th></tr></thead>
+              <tbody>
+<tr><td><code>name</code></td><td>An optional name for the need, such as <code>request-cache</code>.</td></tr>
+<tr><td><a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#41-condition-fields"><code>kind</code></a></td><td>What sort of thing is needed, such as a cache.</td></tr>
+<tr><td><a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#42-interface-fields"><code>interface</code></a></td><td>How the app talks to it, such as <code>key_value</code> with the engine <code>redis</code>.</td></tr>
+<tr><td><a href="https://github.com/runtimeconditions/extensions/tree/main/catalog/rc/env-configuration"><code>configuration</code></a></td><td>Which environment variables the app reads. An extension owns this field, not the core.</td></tr>
+              </tbody>
+            </table>
           </div>
         </section>
 
-        <section class="section">
+        <section class="section" id="extension-declaration">
           <h2>Extension declaration</h2>
           <div class="example">
             <div class="example-title">A profile declares every vocabulary source it uses</div>
             <pre><code>extensions:
-  - https://aws.example.com/runtimeconditions/object-store/v1alpha1/runtimeconditions.extension.yaml
-  - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
-  - https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml</code></pre>
+  - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
+  - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha2</code></pre>
           </div>
+          <p class="short">
+            The first gives the words <code>cache</code>, <code>key_value</code> and <code>redis</code>, and the second gives <code>configuration</code>. An extension from another company is declared the same way, by its id, as in the <a href="https://github.com/runtimeconditions/spec/tree/main/examples/extensions/aws-object-store">AWS Object Store</a> example.
+          </p>
         </section>
 
         <section class="section">
+          <h2>How a profile gets made</h2>
+          <p class="short">There are three ways. However it is made, the same check applies: <code>rc profile validate profile.yaml</code> tests it against the core and the extensions it declares.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Way</th><th>Who writes it</th><th>Good for</th></tr></thead>
+              <tbody>
+<tr><td><strong><a href="developers.html#declare">From your code</a></strong></td><td>A profiler, from the declarations in your code</td><td>Keeping the profile in step with the code, in Go, Java, Python, or TypeScript</td></tr>
+<tr><td><strong>By hand</strong></td><td>You</td><td>A quick start, or an app in a language without a profiler yet</td></tr>
+<tr><td><strong>By an agent</strong></td><td>An AI agent or another tool</td><td>Drafting a profile for an app that already exists</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="validation-order">
           <h2>Validation order</h2>
+          <p class="short">
+            A <strong>validator</strong> checks a profile, and it always works in this order. In <code>rc</code> the validator is <code>rc profile validate</code>: see <a href="cli.html#validate">Validate any profile</a> in the rc CLI chapter. The specification gives the order in <a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#8-validation">section 8, Validation</a>, and what a validator must do in <a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#94-validator-conformance">section 9.4, Validator conformance</a>.
+          </p>
           <ol class="step-list">
             <li><span class="step-num">1</span><div><strong>Structural validation</strong><span>Required fields, types, nulls, duplicate keys.</span></div></li>
-            <li><span class="step-num">2</span><div><strong>Extension resolution</strong><span>Declared extensions and dependencies resolve deterministically.</span></div></li>
-            <li><span class="step-num">3</span><div><strong>Vocabulary validation</strong><span>Every kind, interface, field, and value has exactly one owner.</span></div></li>
-            <li><span class="step-num">4</span><div><strong>Schema validation</strong><span>Core and extension schemas validate semantic rules.</span></div></li>
+            <li><span class="step-num">2</span><div><strong>Extension resolution</strong><span>Every extension the profile declares can be found.</span></div></li>
+            <li><span class="step-num">3</span><div><strong>Dependency resolution</strong><span>The extensions they depend on are found too, with no cycles.</span></div></li>
+            <li><span class="step-num">4</span><div><strong>Vocabulary validation</strong><span>Every kind, interface type, field, and value is defined by an extension, and no two definitions clash.</span></div></li>
+            <li><span class="step-num">5</span><div><strong>Schema validation</strong><span>The JSON Schemas of the extensions pass.</span></div></li>
           </ol>
+        </section>
+
+        <section class="section">
+          <h2>What never belongs in the profile</h2>
+          <ul class="horizontal-list">
+            <li class="mini-card"><strong>Secret values</strong><span>Access keys, tokens, passwords, and private material stay out.</span></li>
+            <li class="mini-card"><strong>Target choices</strong><span>Bucket names, service names, cloud accounts, and cluster topology stay out.</span></li>
+            <li class="mini-card"><strong>Provisioning instructions</strong><span>The profile declares requirements. Adapters and platforms provision or bind resources.</span></li>
+          </ul>
         </section>
 
         <nav class="page-nav" aria-label="Page navigation">
@@ -107,7 +207,7 @@ conditions: []</code></pre>
 
     <footer class="footer">
       <div class="footer-inner">
-        <span>Chapter 2 of 7</span>
+        <span>Chapter 2 of 9</span>
         <a href="developers.html">Continue</a>
       </div>
     </footer>

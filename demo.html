@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Run The Demo | Runtime Conditions</title>
     <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/theme.js"></script>
   </head>
   <body>
     <header class="site-header">
@@ -29,24 +30,27 @@
           <li><a href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
           <li><a href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
           <li><a href="extensions.html"><span class="num">04</span><span>Extensions</span></a></li>
-          <li><a href="platform.html"><span class="num">05</span><span>Adapters</span></a></li>
-          <li><a aria-current="page" href="demo.html"><span class="num">06</span><span>Run the demo</span></a></li>
-          <li><a href="reference.html"><span class="num">07</span><span>Reference</span></a></li>
+          <li><a href="cli.html"><span class="num">05</span><span>rc CLI</span></a></li>
+          <li><a href="platform.html"><span class="num">06</span><span>Adapters</span></a></li>
+          <li><a aria-current="page" href="demo.html"><span class="num">07</span><span>Run the demo</span></a></li>
+          <li><a href="reference.html"><span class="num">08</span><span>Reference</span></a></li>
+          <li><a href="faq.html"><span class="num">09</span><span>FAQ</span></a></li>
         </ol>
       </aside>
 
       <main class="content">
-        <p class="chapter-label">Chapter 6</p>
-        <h1 class="page-title">The demo repo includes apps and adapter assets.</h1>
+        <p class="chapter-label">Chapter 7</p>
+        <h1 class="page-title">Run the whole path yourself.</h1>
         <p class="intro">
-          Generate a Runtime Conditions Profile from the Go request logger source, then use the demo apps and adapter assets to exercise validation and fulfillment workflows.
+          The <a href="https://github.com/runtimeconditions/rc-demos/tree/main">rc-demos</a> repository has an app, the profile made from it, and a Kratix adapter that fulfils the profile on a local cluster. You need <code>kubectl</code>, <code>curl</code>, and a cluster to run it on. A KinD cluster works.
         </p>
 
         <section class="section">
-          <h2>Request logger app</h2>
+          <h2>1. The app</h2>
+          <p class="short">The request logger is a small Go app that calls an HTTP API and Redis. It is its own Go module, and the same app is also written in <a href="https://github.com/runtimeconditions/rc-demos/tree/main/apps/request-logger-http-java">Java</a> and <a href="https://github.com/runtimeconditions/rc-demos/tree/main/apps/request-logger-http-python">Python</a>.</p>
           <div class="example">
             <div class="example-title">
-              <span>Standalone Go app module</span>
+              <span>Run its tests</span>
               <a href="https://github.com/runtimeconditions/rc-demos/blob/main/README.md">demos README</a>
             </div>
             <pre><code>cd apps/request-logger-http
@@ -55,7 +59,20 @@ go test ./...</code></pre>
         </section>
 
         <section class="section">
-          <h2>Run path</h2>
+          <h2>2. The profile</h2>
+          <p class="short">
+            The demo uses the profile that was made from the request logger and committed as <a href="https://github.com/runtimeconditions/rc-demos/blob/main/artifacts/request-logger-http.profile.yaml">artifacts/request-logger-http.profile.yaml</a>. The script that deploys the app puts it into the request, so you do not have to generate it first. It names its Conditions, as the demo adapter needs (see <a href="platform.html">Adapters</a>).
+          </p>
+          <div class="example">
+            <div class="example-title">Make it again, or check that it still matches the source</div>
+            <pre><code>portable-profile/scripts/generate-profile.sh
+portable-profile/scripts/generate-profile.sh --check</code></pre>
+          </div>
+          <p class="short">The script needs the <code>extensions</code> and <code>go-rc-profiler</code> repositories cloned beside <code>rc-demos</code>.</p>
+        </section>
+
+        <section class="section">
+          <h2>3. Run it on Kratix</h2>
           <div class="example">
             <div class="example-title">From the rc-demos repository root</div>
             <pre><code>kratix/scripts/00-check-prereqs.sh
@@ -65,20 +82,24 @@ kratix/scripts/03-deploy-catalog-and-provider.sh
 kratix/scripts/04-deploy-application-release.sh
 kratix/scripts/05-smoke-test.sh</code></pre>
           </div>
+          <p class="short">
+            The images the manifests use are meant to be published under <code>ghcr.io/runtimeconditions/</code>. Until they are, build them from your checkout: run <code>kratix/scripts/load-local-images.sh</code> first, and run the scripts above with <code>IMAGE_PULL_POLICY=IfNotPresent</code>.
+          </p>
         </section>
 
         <section class="section">
           <h2>What should happen</h2>
           <ol class="step-list">
-            <li><span class="step-num">1</span><div><strong>Generator emits profile</strong><span>API and Redis Conditions are discovered from explicit source declarations.</span></div></li>
-            <li><span class="step-num">2</span><div><strong>Adapter validates API</strong><span>The declared `GET /todos/{id}` operation is checked against the catalog OpenAPI document.</span></div></li>
-            <li><span class="step-num">3</span><div><strong>Promises fulfill dependencies</strong><span>Platform resources satisfy the environment mappings declared in the profile.</span></div></li>
-            <li><span class="step-num">4</span><div><strong>Workload receives env</strong><span>Deployment env entries and Kubernetes Deployment/Service resources are rendered from resolved platform context.</span></div></li>
+            <li><span class="step-num">1</span><div><strong>The adapter reads the profile</strong><span>Script 04 puts the profile into the <code>ApplicationRelease</code> request, and the adapter reads its Conditions.</span></div></li>
+            <li><span class="step-num">2</span><div><strong>It checks the API</strong><span>The declared <code>GET /todos/{id}</code> operation is checked against the catalog OpenAPI document.</span></div></li>
+            <li><span class="step-num">3</span><div><strong>The Promises create what is needed</strong><span>A Redis is requested from the Redis Promise, and its address is worked out.</span></div></li>
+            <li><span class="step-num">4</span><div><strong>The app gets its variables</strong><span>The Deployment and Service are rendered with <code>TODOS_API_URL</code>, <code>REDIS_URL</code>, and the others filled in.</span></div></li>
           </ol>
         </section>
 
         <section class="section">
-          <h2>Breaking contract check</h2>
+          <h2>A change that breaks the contract</h2>
+          <p class="short">This script publishes a catalog where the API no longer matches what the profile declares, and submits a release that should be refused.</p>
           <div class="example">
             <div class="example-title">The adapter should fail before writing the Deployment</div>
             <pre><code>kratix/scripts/06-demo-breaking-change.sh</code></pre>
@@ -94,7 +115,7 @@ kratix/scripts/05-smoke-test.sh</code></pre>
 
     <footer class="footer">
       <div class="footer-inner">
-        <span>Chapter 6 of 7</span>
+        <span>Chapter 7 of 9</span>
         <a href="reference.html">Continue</a>
       </div>
     </footer>
