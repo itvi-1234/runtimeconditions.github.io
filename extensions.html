@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Extensions | Runtime Conditions</title>
     <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/theme.js"></script>
   </head>
   <body>
     <header class="site-header">
@@ -29,37 +30,256 @@
           <li><a href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
           <li><a href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
           <li><a aria-current="page" href="extensions.html"><span class="num">04</span><span>Extensions</span></a></li>
-          <li><a href="platform.html"><span class="num">05</span><span>Adapters</span></a></li>
-          <li><a href="demo.html"><span class="num">06</span><span>Run the demo</span></a></li>
-          <li><a href="reference.html"><span class="num">07</span><span>Reference</span></a></li>
+          <li><a href="cli.html"><span class="num">05</span><span>rc CLI</span></a></li>
+          <li><a href="platform.html"><span class="num">06</span><span>Adapters</span></a></li>
+          <li><a href="demo.html"><span class="num">07</span><span>Run the demo</span></a></li>
+          <li><a href="reference.html"><span class="num">08</span><span>Reference</span></a></li>
+          <li><a href="faq.html"><span class="num">09</span><span>FAQ</span></a></li>
         </ol>
       </aside>
 
       <main class="content">
         <p class="chapter-label">Chapter 4</p>
-        <h1 class="page-title">Extensions add vocabulary and validation to the core.</h1>
+        <h1 class="page-title">Extensions give a profile its words.</h1>
         <p class="intro">
-          The core profile shape is intentionally small. Extensions define the concrete words that make a profile useful: kinds, interface types, fields, field values, and JSON Schema validation.
+          A <a href="spec.html">profile</a> has a fixed shape, and extensions fill it in. An extension defines the kinds, interface types, fields, and allowed values a profile can use, and the JSON Schema that checks them.
         </p>
 
         <section class="section">
           <h2>What an extension owns</h2>
+          <p class="short">An extension is a YAML definition. These are the parts it can have, and each one is a word in a profile: <code>cache</code> is a kind, <code>key_value</code> is an interface type, and <code>redis</code> is a field value.</p>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr><th>Extension Part</th><th>What It Does</th><th>Example</th></tr>
               </thead>
               <tbody>
-                <tr><td>`dependencies`</td><td>References vocabulary owned by other extensions.</td><td>`https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml`</td></tr>
-                <tr><td>`kinds`</td><td>Defines Condition categories.</td><td>`api`, `datastore`, `cache`</td></tr>
-                <tr><td>`interfaceTypes`</td><td>Defines valid interface types for a kind.</td><td>`http` for `api`, `key_value` for `cache`</td></tr>
-                <tr><td>`conditionFields`</td><td>Defines extension-owned fields on Conditions.</td><td>`configuration`</td></tr>
-                <tr><td>`interfaceFields`</td><td>Defines extension-owned fields inside `interface`.</td><td>`interface.engine`, `interface.operations`</td></tr>
-                <tr><td>`fieldValues`</td><td>Defines allowed values for extension-owned fields.</td><td>`redis`, `memcached`, `GET`, `POST`</td></tr>
-                <tr><td>`schemas`</td><td>Defines machine-readable validation.</td><td>JSON Schema for HTTP API Conditions</td></tr>
+                <tr><td><code>dependencies</code></td><td>References vocabulary owned by other extensions.</td><td><code>https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha2/runtimeconditions.extension.yaml</code></td></tr>
+                <tr><td><code>kinds</code></td><td>Defines Condition categories.</td><td><code>api</code>, <code>datastore</code>, <code>cache</code></td></tr>
+                <tr><td><code>interfaceTypes</code></td><td>Defines valid interface types for a kind.</td><td><code>http</code> for <code>api</code>, <code>key_value</code> for <code>cache</code></td></tr>
+                <tr><td><code>conditionFields</code></td><td>Defines extension-owned fields on Conditions.</td><td><code>configuration</code></td></tr>
+                <tr><td><code>interfaceFields</code></td><td>Defines extension-owned fields inside <code>interface</code>.</td><td><code>interface.engine</code>, <code>interface.operations</code></td></tr>
+                <tr><td><code>fieldValues</code></td><td>Defines allowed values for extension-owned fields.</td><td><code>redis</code>, <code>memcached</code>, <code>GET</code>, <code>POST</code></td></tr>
+                <tr><td><code>schemas</code></td><td>Defines machine-readable validation.</td><td>JSON Schema for HTTP API Conditions</td></tr>
               </tbody>
             </table>
           </div>
+        </section>
+
+        <section class="section" id="behind-the-example">
+          <h2>The extensions behind the example</h2>
+          <p class="short">
+            The profile in <a href="spec.html#complete-profile">Profile shape</a> uses two extensions, and every word in it comes from one of them.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Word in the profile</th><th>Defined by</th><th>As</th></tr></thead>
+              <tbody>
+<tr><td><code>kind: cache</code></td><td><a href="https://github.com/runtimeconditions/extensions/tree/main/catalog/rc/common-integrations">Common Integrations</a></td><td>kinds</td></tr>
+<tr><td><code>interface.type: key_value</code></td><td>Common Integrations</td><td>interfaceTypes</td></tr>
+<tr><td><code>interface.engine: redis</code></td><td>Common Integrations</td><td>interfaceFields and fieldValues</td></tr>
+<tr><td><code>configuration</code></td><td><a href="https://github.com/runtimeconditions/extensions/tree/main/catalog/rc/env-configuration">Environment Configuration</a></td><td>conditionFields and fieldValues</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="short">
+            The two sections below show their definitions. Environment Configuration depends on Common Integrations, so a profile that uses configuration declares both, as <a href="spec.html#extension-declaration">Extension declaration</a> shows.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>First-party extension: Common Integrations</h2>
+          <p class="short">
+            The Common Integrations extension defines standard integration vocabulary for APIs, datastores, and caches. Profiles that use <code>kind: cache</code> or <code>interface.type: http</code> depend on this extension.
+          </p>
+          <div class="example">
+            <div class="example-title">
+              <span>catalog/rc/common-integrations/common-integrations-v1alpha2.yaml</span>
+              <a href="https://github.com/runtimeconditions/extensions/blob/main/catalog/rc/common-integrations/common-integrations-v1alpha2.yaml">source</a>
+            </div>
+            <pre><code>metadata:
+  id: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha2/runtimeconditions.extension.yaml
+  version: v1alpha2
+
+spec:
+  kinds:
+    - name: api
+    - name: datastore
+    - name: cache
+
+  interfaceTypes:
+    - name: http
+      targetKind: api
+    - name: relational
+      targetKind: datastore
+    - name: document
+      targetKind: datastore
+    - name: key_value
+      targetKind: cache
+    - name: smtp
+      targetKind: api</code></pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>First-party extension: Environment Configuration</h2>
+          <p class="short">
+            The Environment Configuration extension adds the <code>configuration</code> field to common integration Conditions. It depends on Common Integrations and scopes its field to common-owned kinds and interface types.
+          </p>
+          <div class="example">
+            <div class="example-title">
+              <span>catalog/rc/env-configuration/env-configuration-v1alpha2.yaml</span>
+              <a href="https://github.com/runtimeconditions/extensions/blob/main/catalog/rc/env-configuration/env-configuration-v1alpha2.yaml">source</a>
+            </div>
+            <pre><code>spec:
+  dependencies:
+    - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha2/runtimeconditions.extension.yaml
+
+  conditionFields:
+    - name: configuration
+      appliesToKinds:
+        - api
+      appliesToInterfaceTypes:
+        - http
+    - name: configuration
+      appliesToKinds:
+        - datastore
+      appliesToInterfaceTypes:
+        - relational
+        - document
+    - name: configuration
+      appliesToKinds:
+        - cache
+      appliesToInterfaceTypes:
+        - key_value
+    - name: configuration
+      appliesToKinds:
+        - api
+      appliesToInterfaceTypes:
+        - smtp
+
+  fieldValues:
+    - field: configuration.env[].property
+      targetKind: cache
+      targetType: key_value
+      values:
+        - url
+        - hostname
+        - port
+        - scheme
+        - username
+        - password
+        - database
+        - token
+        - tls</code></pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>How a profile uses extensions</h2>
+          <p class="short">
+            The profile declares every extension required to interpret its vocabulary. Transitive dependencies are resolved by validators and tooling, but generated profiles should still declare the vocabulary they directly use. The validator checks every word against these extensions, in the order shown under <a href="spec.html#validation-order">Validation order</a>.
+          </p>
+          <div class="example">
+            <div class="example-title">Profile declaration and extension-owned fields</div>
+            <pre><code>extensions:
+  - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
+  - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha2
+
+conditions:
+  - name: request-cache
+    kind: cache              # common-integrations
+    interface:
+      type: key_value        # common-integrations
+      engine: redis          # common-integrations field value
+    configuration:           # env-configuration
+      alternatives:
+        - env:
+            - property: url  # env-configuration field value
+              name: REDIS_URL</code></pre>
+          </div>
+        </section>
+
+        <section class="section" id="binding-packages">
+          <h2>From extension to code: binding packages</h2>
+          <p class="short">
+            An extension is a definition, and <a href="cli.html#bindings"><code>rc bindings generate</code></a> turns it into packages you can import. <a href="developers.html">Code to profile</a> shows how to use them in your code.
+            Every first-party extension has a generated binding package in four languages. Each is built from the extension, so a declaration written against it is checked by the compiler, and each carries the resources a profiler verifies. The versions are the latest published; each name links to its registry page.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Extension</th><th>Go module</th><th>Python (PyPI)</th><th>TypeScript (npm)</th><th>Java (Maven Central)</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>common-integrations</strong><br /><code>rc/common-integrations</code> v1alpha2</td>
+                  <td><a href="https://pkg.go.dev/runtimeconditions.io/x/rc/common@v0.3.0">0.3.0</a></td>
+                  <td><a href="https://pypi.org/project/runtimeconditions-common-integrations/">0.2.0</a></td>
+                  <td><a href="https://www.npmjs.com/package/@runtimeconditions/common-integrations">0.3.0</a></td>
+                  <td><a href="https://central.sonatype.com/artifact/io.runtimeconditions.bindings/runtimeconditions-common-integrations/0.1.0">0.1.0</a></td>
+                </tr>
+                <tr>
+                  <td><strong>env-configuration</strong><br /><code>rc/env-configuration</code> v1alpha2</td>
+                  <td><a href="https://pkg.go.dev/runtimeconditions.io/x/rc/env@v0.3.0">0.3.0</a></td>
+                  <td><a href="https://pypi.org/project/runtimeconditions-env-configuration/">0.2.0</a></td>
+                  <td><a href="https://www.npmjs.com/package/@runtimeconditions/env-configuration">0.3.0</a></td>
+                  <td><a href="https://central.sonatype.com/artifact/io.runtimeconditions.bindings/runtimeconditions-env-configuration/0.1.0">0.1.0</a></td>
+                </tr>
+                <tr>
+                  <td><strong>source-control</strong><br /><code>rc/source-control</code> 0.1.0</td>
+                  <td><a href="https://pkg.go.dev/runtimeconditions.io/x/rc/source@v0.1.0">0.1.0</a></td>
+                  <td><a href="https://pypi.org/project/runtimeconditions-source-control/">0.1.0</a></td>
+                  <td><a href="https://www.npmjs.com/package/@runtimeconditions/source-control">0.1.0</a></td>
+                  <td><a href="https://central.sonatype.com/artifact/io.runtimeconditions.bindings/runtimeconditions-source-control/0.1.0">0.1.0</a></td>
+                </tr>
+                <tr>
+                  <td><strong>aws-s3</strong><br /><code>aws/s3</code> 0.2.0</td>
+                  <td><a href="https://pkg.go.dev/runtimeconditions.io/x/aws/s3@v0.2.0">0.2.0</a></td>
+                  <td><a href="https://pypi.org/project/runtimeconditions-aws-s3/">0.2.0</a></td>
+                  <td><a href="https://www.npmjs.com/package/@runtimeconditions/aws-s3">0.2.0</a></td>
+                  <td><a href="https://central.sonatype.com/artifact/io.runtimeconditions.bindings/runtimeconditions-aws-s3/0.1.0">0.1.0</a></td>
+                </tr>
+                <tr>
+                  <td><strong>google-analytics</strong><br /><code>google/analytics</code> 0.1.0</td>
+                  <td><a href="https://pkg.go.dev/runtimeconditions.io/x/google/analytics@v0.1.0">0.1.0</a></td>
+                  <td><a href="https://pypi.org/project/runtimeconditions-google-analytics/">0.1.0</a></td>
+                  <td><a href="https://www.npmjs.com/package/@runtimeconditions/google-analytics">0.1.0</a></td>
+                  <td><a href="https://central.sonatype.com/artifact/io.runtimeconditions.bindings/runtimeconditions-google-analytics/0.1.0">0.1.0</a></td>
+                </tr>
+                <tr>
+                  <td><strong>kubernetes-api</strong><br /><code>kubernetes/api</code> 0.1.0</td>
+                  <td><a href="https://pkg.go.dev/runtimeconditions.io/x/kubernetes/api@v0.1.0">0.1.0</a></td>
+                  <td><a href="https://pypi.org/project/runtimeconditions-kubernetes-api/">0.1.0</a></td>
+                  <td><a href="https://www.npmjs.com/package/@runtimeconditions/kubernetes-api">0.1.0</a></td>
+                  <td><a href="https://central.sonatype.com/artifact/io.runtimeconditions.bindings/runtimeconditions-kubernetes-api/0.1.0">0.1.0</a></td>
+                </tr>
+                <tr>
+                  <td><strong>nats-service</strong><br /><code>nats/service</code> 0.2.0</td>
+                  <td><a href="https://pkg.go.dev/runtimeconditions.io/x/nats/service@v0.2.0">0.2.0</a></td>
+                  <td><a href="https://pypi.org/project/runtimeconditions-nats-service/">0.2.0</a></td>
+                  <td><a href="https://www.npmjs.com/package/@runtimeconditions/nats-service">0.2.0</a></td>
+                  <td><a href="https://central.sonatype.com/artifact/io.runtimeconditions.bindings/runtimeconditions-nats-service/0.1.0">0.1.0</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="example">
+            <div class="example-title">Install</div>
+            <pre><code>go get runtimeconditions.io/x/rc/common@v0.3.0
+pip install runtimeconditions-common-integrations
+npm install @runtimeconditions/common-integrations</code></pre>
+          </div>
+          <p class="short">
+            The Go modules are named <code>runtimeconditions.io/x/&lt;extension&gt;</code>, the Python and npm packages <code>runtimeconditions-&lt;package&gt;</code> and <code>@runtimeconditions/&lt;package&gt;</code>, and the Java artifacts <code>io.runtimeconditions.bindings:runtimeconditions-&lt;package&gt;</code>. The source of every package is under <a href="https://github.com/runtimeconditions/extensions/tree/main/bindings">bindings/</a> in the extensions repository.
+          </p>
+        </section>
+
+        <section class="section" id="writing">
+          <h2>Writing an extension</h2>
+          <p class="short">
+            Everything above is how extensions are used. The rest is for writing one, whether for your own company or to share. The <a href="faq.html#own-catalog">FAQ</a> lists the steps, and the <a href="https://github.com/runtimeconditions/spec/blob/main/docs/guides/extension-authoring.md">extension authoring guide</a> has the rules.
+          </p>
         </section>
 
         <section class="section">
@@ -73,12 +293,12 @@
                 <tr><th>Author wants to</th><th>Use</th><th>Result</th></tr>
               </thead>
               <tbody>
-                <tr><td>Add a Condition category</td><td>`kinds`</td><td>`kind: aws.object_store`</td></tr>
-                <tr><td>Add an interface type for a kind</td><td>`interfaceTypes`</td><td>`interface.type: aws.s3`</td></tr>
-                <tr><td>Add a top-level Condition field</td><td>`conditionFields`</td><td>`configuration`, `trust`, `access`</td></tr>
-                <tr><td>Add a field inside `interface`</td><td>`interfaceFields`</td><td>`interface.engine`, `interface.bucketClass`</td></tr>
-                <tr><td>Define portable value choices</td><td>`fieldValues`</td><td>`redis`, `standard`, `GET`</td></tr>
-                <tr><td>Validate object shape</td><td>`schemas`</td><td>Required properties, arrays, conditional rules</td></tr>
+                <tr><td>Add a Condition category</td><td><code>kinds</code></td><td><code>kind: aws.object_store</code></td></tr>
+                <tr><td>Add an interface type for a kind</td><td><code>interfaceTypes</code></td><td><code>interface.type: aws.s3</code></td></tr>
+                <tr><td>Add a top-level Condition field</td><td><code>conditionFields</code></td><td><code>configuration</code>, <code>trust</code>, <code>access</code></td></tr>
+                <tr><td>Add a field inside <code>interface</code></td><td><code>interfaceFields</code></td><td><code>interface.engine</code>, <code>interface.bucketClass</code></td></tr>
+                <tr><td>Define portable value choices</td><td><code>fieldValues</code></td><td><code>redis</code>, <code>standard</code>, <code>GET</code></td></tr>
+                <tr><td>Validate object shape</td><td><code>schemas</code></td><td>Required properties, arrays, conditional rules</td></tr>
               </tbody>
             </table>
           </div>
@@ -101,7 +321,7 @@ interfaceFields:
         <section class="section">
           <h2>Field paths point to owned fields</h2>
           <p class="short">
-            `fieldValues` names allowed values for a field path. It does not create the field; the path must resolve to `interface.type`, an `interfaceFields` entry, or a scoped `conditionFields` entry.
+            <code>fieldValues</code> names allowed values for a field path. It does not create the field; the path must resolve to <code>interface.type</code>, an <code>interfaceFields</code> entry, or a scoped <code>conditionFields</code> entry.
           </p>
           <div class="example">
             <div class="example-title">Interface path</div>
@@ -135,34 +355,6 @@ fieldValues:
       - url
       - hostname
       - port</code></pre>
-          </div>
-        </section>
-
-        <section class="section">
-          <h2>First-party extension: Common Integrations</h2>
-          <p class="short">
-            The Common Integrations extension defines standard integration vocabulary for APIs, datastores, and caches. Profiles that use `kind: cache` or `interface.type: http` depend on this extension.
-          </p>
-          <div class="example">
-            <div class="example-title">
-              <span>common-integrations/common-integrations-v1alpha1.yaml</span>
-              <a href="https://github.com/runtimeconditions/extensions/blob/main/common-integrations/common-integrations-v1alpha1.yaml">source</a>
-            </div>
-            <pre><code>metadata:
-  id: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
-  version: v1alpha1
-
-spec:
-  kinds:
-    - name: api
-    - name: datastore
-    - name: cache
-
-  interfaceTypes:
-    - name: http
-      targetKind: api
-    - name: key_value
-      targetKind: cache</code></pre>
           </div>
         </section>
 
@@ -202,7 +394,7 @@ spec:
         <section class="section">
           <h2>Extensions define JSON Schema validation</h2>
           <p class="short">
-            Schema rules make extension validation portable. The validator can evaluate the profile without interpreting prose.
+            Schema rules make extension validation portable. The validator can evaluate the profile without interpreting prose. This is the last step of <a href="spec.html#validation-order">Validation order</a>.
           </p>
           <div class="example">
             <div class="example-title">HTTP API schema excerpt</div>
@@ -236,137 +428,9 @@ spec:
         </section>
 
         <section class="section">
-          <h2>First-party extension: Environment Configuration</h2>
-          <p class="short">
-            The Environment Configuration extension adds the `configuration` field to common integration Conditions. It depends on Common Integrations and scopes its field to common-owned kinds and interface types.
-          </p>
-          <div class="example">
-            <div class="example-title">
-              <span>env-configuration/env-configuration-v1alpha1.yaml</span>
-              <a href="https://github.com/runtimeconditions/extensions/blob/main/env-configuration/env-configuration-v1alpha1.yaml">source</a>
-            </div>
-            <pre><code>spec:
-  dependencies:
-    - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
-
-  conditionFields:
-    - name: configuration
-      appliesToKinds:
-        - api
-      appliesToInterfaceTypes:
-        - http
-    - name: configuration
-      appliesToKinds:
-        - datastore
-      appliesToInterfaceTypes:
-        - relational
-        - document
-    - name: configuration
-      appliesToKinds:
-        - cache
-      appliesToInterfaceTypes:
-        - key_value
-
-  fieldValues:
-    - field: configuration.env[].property
-      targetKind: cache
-      targetType: key_value
-      values:
-        - url
-        - hostname
-        - port
-        - username
-        - password
-        - token</code></pre>
-          </div>
-        </section>
-
-        <section class="section">
-          <h2>Declaration packages follow ownership</h2>
-          <p class="short">
-            Common declarations come from `common-integrations/go`. Environment configuration contributes typed options from `env-configuration/go`.
-            The binding manifest is first-party generator metadata; it does not define extension vocabulary.
-          </p>
-          <div class="example">
-            <div class="example-title">Dual-import declaration code</div>
-            <pre><code>import (
-  common "runtimeconditions.io/x/rc/common"
-  env "runtimeconditions.io/x/rc/env"
-)
-
-common.Cache("request-cache",
-  common.KeyValue(common.Redis),
-  env.EnvAlternative(env.Env("url", "REDIS_URL")),
-)</code></pre>
-          </div>
-          <div class="example">
-            <div class="example-title">Option-only binding manifest</div>
-            <pre><code>apiVersion: runtimeconditions.io/v1alpha1
-kind: RuntimeConditionsBinding
-
-metadata:
-  extension: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
-  language: go
-
-go:
-  importPath: runtimeconditions.io/x/rc/env
-  package: envconfiguration
-
-  options:
-    - function: Env
-      target: configuration.env[]
-      appliesToKinds:
-        - api
-        - datastore
-        - cache
-      stringArgs:
-        property: 0
-        name: 1
-
-    - function: EnvAlternative
-      target: configuration.alternatives[]
-      appliesToKinds:
-        - api
-        - datastore
-        - cache
-      options:
-        - function: Env
-          target: configuration.env[]
-          stringArgs:
-            property: 0
-            name: 1</code></pre>
-          </div>
-        </section>
-
-        <section class="section">
-          <h2>How a profile uses extensions</h2>
-          <p class="short">
-            The profile declares every extension required to interpret its vocabulary. Transitive dependencies are resolved by validators and tooling, but generated profiles should still declare the vocabulary they directly use.
-          </p>
-          <div class="example">
-            <div class="example-title">Profile declaration and extension-owned fields</div>
-            <pre><code>extensions:
-  - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha1
-  - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha1
-
-conditions:
-  - name: request-cache
-    kind: cache              # common-integrations
-    interface:
-      type: key_value        # common-integrations
-      engine: redis          # common-integrations field value
-    configuration:           # env-configuration
-      alternatives:
-        - env:
-            - property: url  # env-configuration field value
-              name: REDIS_URL</code></pre>
-          </div>
-        </section>
-
-        <section class="section">
           <h2>Third-party extensions follow the same rules</h2>
           <p class="short">
-            The AWS Object Store extension is treated as a third-party example. It defines `aws.object_store`, `aws.s3`, S3-specific fields, and its own scoped `configuration` properties.
+            The AWS Object Store extension is treated as a third-party example. Any company can publish one like it: see <a href="faq.html#own-catalog">Can a company write its own catalog?</a> It defines <code>aws.object_store</code>, <code>aws.s3</code>, S3-specific fields, and its own scoped <code>configuration</code> properties.
           </p>
           <div class="example">
             <div class="example-title">
@@ -396,15 +460,15 @@ spec:
 
         <nav class="page-nav" aria-label="Page navigation">
           <a href="developers.html">Previous: Code to profile</a>
-          <a href="platform.html">Next: Adapters</a>
+          <a href="cli.html">Next: rc CLI</a>
         </nav>
       </main>
     </div>
 
     <footer class="footer">
       <div class="footer-inner">
-        <span>Chapter 4 of 7</span>
-        <a href="platform.html">Continue</a>
+        <span>Chapter 4 of 9</span>
+        <a href="cli.html">Continue</a>
       </div>
     </footer>
     <script src="assets/syntax.js" defer></script>

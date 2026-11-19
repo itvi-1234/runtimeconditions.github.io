@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Code To Profile | Runtime Conditions</title>
     <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/theme.js"></script>
   </head>
   <body>
     <header class="site-header">
@@ -29,83 +30,84 @@
           <li><a href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
           <li><a aria-current="page" href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
           <li><a href="extensions.html"><span class="num">04</span><span>Extensions</span></a></li>
-          <li><a href="platform.html"><span class="num">05</span><span>Adapters</span></a></li>
-          <li><a href="demo.html"><span class="num">06</span><span>Run the demo</span></a></li>
-          <li><a href="reference.html"><span class="num">07</span><span>Reference</span></a></li>
+          <li><a href="cli.html"><span class="num">05</span><span>rc CLI</span></a></li>
+          <li><a href="platform.html"><span class="num">06</span><span>Adapters</span></a></li>
+          <li><a href="demo.html"><span class="num">07</span><span>Run the demo</span></a></li>
+          <li><a href="reference.html"><span class="num">08</span><span>Reference</span></a></li>
+          <li><a href="faq.html"><span class="num">09</span><span>FAQ</span></a></li>
         </ol>
       </aside>
 
       <main class="content">
         <p class="chapter-label">Chapter 3</p>
-        <h1 class="page-title">The generator turns source declarations into profile YAML.</h1>
+        <h1 class="page-title">The profiler turns source declarations into profile YAML.</h1>
         <p class="intro">
-          This page follows the explicit declaration path in the Go demo. It uses real files from the split Runtime Conditions repos and shows enough surrounding code to make each step clear.
+          Declare what an app needs in the language it is written in, run the profiler, and get a profile. Pick your language.
         </p>
 
-        <section class="section">
-          <h2>1. The application imports declaration packages</h2>
-          <p class="short">The declarations are regular Go calls. They are intentionally no-op at runtime, but the generator can identify them in the AST.</p>
-          <div class="example">
-            <div class="example-title">
-              <span>apps/request-logger-http/conditions.go</span>
-              <a href="https://github.com/runtimeconditions/rc-demos/blob/main/apps/request-logger-http/conditions.go">source</a>
+        <section class="section" id="declare">
+          <div class="tabs">
+            <div class="tab-list" role="tablist" aria-label="Language"><button type="button" role="tab" id="tab-button-go" aria-controls="tab-go" aria-selected="true">Go</button><button type="button" role="tab" id="tab-button-java" aria-controls="tab-java" aria-selected="false">Java</button><button type="button" role="tab" id="tab-button-python" aria-controls="tab-python" aria-selected="false">Python</button><button type="button" role="tab" id="tab-button-typescript" aria-controls="tab-typescript" aria-selected="false">TypeScript</button></div>
+          <div class="tab-panel" id="tab-go" role="tabpanel" aria-labelledby="tab-button-go">
+            <h3>1. Add the packages</h3>
+            <p class="short">Add the generated binding modules like any Go module. The Go profiler is built into <code>rc</code>.</p>
+            <p class="short">These two are the packages for Common Integrations and Env Configuration. Every extension has packages in all four languages: see the <a href="extensions.html#binding-packages">Binding packages</a> table.</p>
+            <div class="example">
+              <div class="example-title"><span>Install</span></div>
+              <pre><code>go get runtimeconditions.io/x/rc/common runtimeconditions.io/x/rc/env</code></pre>
             </div>
-            <pre><code>package main
+            <h3>2. Declare what the app needs</h3>
+            <p class="short">Each declaration is a call built from generated types, so the compiler checks every field. The calls do nothing when the app runs. The app below needs an HTTP API, with the environment variable that holds its URL, and a Redis cache, with two ways to find it.</p>
+            <div class="example">
+              <div class="example-title"><span>conditions.go</span></div>
+              <pre><code>package main
 
 import (
-  common "runtimeconditions.io/x/rc/common"
-  env "runtimeconditions.io/x/rc/env"
-)</code></pre>
-          </div>
-        </section>
+  "runtimeconditions.io/x/rc/common"
+  "runtimeconditions.io/x/rc/env"
+)
 
-        <section class="section">
-          <h2>2. The app declares the runtime integrations it expects</h2>
-          <p class="short">The API declaration names the catalog entry, the HTTP operation the workload calls, the expected response shape, and the environment variable the app reads.</p>
-          <div class="example">
-            <div class="example-title">
-              <span>apps/request-logger-http/conditions.go</span>
-              <a href="https://github.com/runtimeconditions/rc-demos/blob/main/apps/request-logger-http/conditions.go">source</a>
-            </div>
-            <pre><code>func declaration() {
-  common.API("todos-api",
-    common.Spec("openapi", "catalog://api/default/todos-api", "1.0.0"),
-    common.GET("/todos/{id}", common.Response[Todo]()),
-    env.Env("baseUrl", "TODOS_API_URL"),
+func declaration() {
+  _ = common.Api(
+    common.Http{
+      Spec: &amp;common.Spec{Format: common.FormatOpenapi, Uri: "catalog://api/default/todos-api"},
+      Operations: common.HttpOperations{
+        {Method: common.MethodGet, Path: "/todos/{id}"},
+      },
+    },
+    env.HttpConfiguration{
+      Env: env.HttpConfigurationEnv{
+        {Name: "TODOS_API_URL", Property: env.HttpConfigurationEnvPropertyBaseUrl},
+      },
+    },
   )
 
-  common.Cache("request-cache",
-    common.KeyValue(common.Redis),
-    env.EnvAlternative(env.Env("url", "REDIS_URL")),
-    env.EnvAlternative(
-      env.Env("hostname", "REDIS_HOST"),
-      env.Env("port", "REDIS_PORT"),
-    ),
+  _ = common.Cache(
+    common.KeyValue{Engine: &amp;[]common.KeyValueEngine{common.KeyValueEngineRedis}[0]},
+    env.KeyValueConfiguration{
+      Alternatives: env.KeyValueConfigurationAlternatives{
+        {Env: env.KeyValueConfigurationAlternativesEnv{
+          {Name: "REDIS_URL", Property: env.KeyValueConfigurationAlternativesEnvPropertyUrl},
+        }},
+        {Env: env.KeyValueConfigurationAlternativesEnv{
+          {Name: "REDIS_HOST", Property: env.KeyValueConfigurationAlternativesEnvPropertyHostname},
+          {Name: "REDIS_PORT", Property: env.KeyValueConfigurationAlternativesEnvPropertyPort},
+        }},
+      },
+    },
   )
 }</code></pre>
-          </div>
-        </section>
-
-        <section class="section">
-          <h2>3. The app uses those env vars in normal runtime code</h2>
-          <p class="short">The profile records the names `TODOS_API_URL` and `REDIS_URL`; it does not provide their values. The adapter supplies those later.</p>
-          <div class="example">
-            <div class="example-title">
-              <span>apps/request-logger-http/main.go</span>
-              <a href="https://github.com/runtimeconditions/rc-demos/blob/main/apps/request-logger-http/main.go">source</a>
             </div>
-            <pre><code>func checkTodosAPI(ctx context.Context) error {
+            <h3>3. Use the variables in normal code</h3>
+            <p class="short">The profile records the names <code>TODOS_API_URL</code> and <code>REDIS_URL</code>, not their values. The app reads them as it always did, and the platform supplies them later.</p>
+            <div class="example">
+              <div class="example-title"><span>main.go</span></div>
+              <pre><code>func checkTodosAPI(ctx context.Context) error {
   baseURL := strings.TrimRight(os.Getenv("TODOS_API_URL"), "/")
   if baseURL == "" {
     return errors.New("TODOS_API_URL is not set")
   }
-
-  request, err := http.NewRequestWithContext(
-    ctx,
-    http.MethodGet,
-    baseURL+"/todos/1",
-    nil,
-  )
+  request, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL+"/todos/1", nil)
   if err != nil {
     return err
   }
@@ -116,129 +118,369 @@ import (
   defer response.Body.Close()
   return nil
 }</code></pre>
-          </div>
-        </section>
-
-        <section class="section">
-          <h2>4. The declaration helpers themselves do nothing at runtime</h2>
-          <p class="short">This keeps application behavior unchanged. The generator reads calls to these functions; the compiled service just receives inert values.</p>
-          <div class="example">
-            <div class="example-title">
-              <span>common-integrations/go/declarations.go</span>
-              <a href="https://github.com/runtimeconditions/extensions/blob/main/common-integrations/go/declarations.go">source</a>
             </div>
-            <pre><code>// API declares an external API dependency.
-func API(name string, options ...APIOption) Declaration {
-  return Declaration{}
-}
-
-// Cache declares a cache dependency.
-func Cache(name string, options ...CacheOption) Declaration {
-  return Declaration{}
-}</code></pre>
-          </div>
-          <div class="example">
-            <div class="example-title">
-              <span>env-configuration/go/declarations.go</span>
-              <a href="https://github.com/runtimeconditions/extensions/blob/main/env-configuration/go/declarations.go">source</a>
+            <h3>4. Run the profiler</h3>
+            <p class="short">These commands use the <code>rc</code> CLI. The <a href="cli.html">rc CLI</a> chapter shows how to install it and lists every command.</p>
+            <div class="example">
+              <div class="example-title"><span>Run</span></div>
+              <pre><code>rc profile generate \
+  --dir . \
+  --name request-logger-http \
+  --workload-uri github.com/runtimeconditions/rc-demos/apps/request-logger-http \
+  --workload-version v0.1.0 \
+  --out profile.yaml</code></pre>
             </div>
-            <pre><code>type ConditionOption interface {
-  common.APIOption
-  common.DatastoreOption
-  common.CacheOption
-  envConfigurationConditionOption()
-}
+            <p class="short">The profiler parses and type-checks your module, so it needs a Go toolchain and your dependencies downloaded. It reads literals, named constants, and typed composite literals. A value it cannot determine fails with the file and line, never with part of a Condition.</p>
+          </div>
+          <div class="tab-panel" id="tab-java" role="tabpanel" aria-labelledby="tab-button-java">
+            <h3>1. Add the packages</h3>
+            <p class="short">Add the binding packages from Maven Central, and install the profiler. It needs a <strong>JDK 17 or newer</strong>, not a JRE.</p>
+            <p class="short">These two are the packages for Common Integrations and Env Configuration. Every extension has packages in all four languages: see the <a href="extensions.html#binding-packages">Binding packages</a> table.</p>
+            <div class="example">
+              <div class="example-title"><span>Install</span></div>
+              <pre><code># pom.xml
+&lt;dependency&gt;
+  &lt;groupId&gt;io.runtimeconditions.bindings&lt;/groupId&gt;
+  &lt;artifactId&gt;runtimeconditions-common-integrations&lt;/artifactId&gt;
+  &lt;version&gt;0.1.0&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;io.runtimeconditions.bindings&lt;/groupId&gt;
+  &lt;artifactId&gt;runtimeconditions-env-configuration&lt;/artifactId&gt;
+  &lt;version&gt;0.1.0&lt;/version&gt;
+&lt;/dependency&gt;
 
-func Env(property, name string, options ...EnvOption) ConditionOption {
-  return conditionOption{}
+# the profiler
+brew install runtimeconditions/tools/rc-profiler-java</code></pre>
+            </div>
+            <h3>2. Declare what the app needs</h3>
+            <p class="short">Each declaration is a call built from generated types, so the compiler checks every field. The calls do nothing when the app runs. The app below needs an HTTP API, with the environment variable that holds its URL, and a Redis cache, with two ways to find it.</p>
+            <div class="example">
+              <div class="example-title"><span>Conditions.java</span></div>
+              <pre><code>package demo;
+
+import io.runtimeconditions.bindings.commonintegrations.Bindings;
+import io.runtimeconditions.bindings.commonintegrations.Format;
+import io.runtimeconditions.bindings.commonintegrations.Http;
+import io.runtimeconditions.bindings.commonintegrations.HttpOperations;
+import io.runtimeconditions.bindings.commonintegrations.HttpOperationsItem;
+import io.runtimeconditions.bindings.commonintegrations.KeyValue;
+import io.runtimeconditions.bindings.commonintegrations.KeyValueEngine;
+import io.runtimeconditions.bindings.commonintegrations.Method;
+import io.runtimeconditions.bindings.commonintegrations.Spec;
+import io.runtimeconditions.bindings.envconfiguration.HttpConfiguration;
+import io.runtimeconditions.bindings.envconfiguration.HttpConfigurationEnv;
+import io.runtimeconditions.bindings.envconfiguration.HttpConfigurationEnvItem;
+import io.runtimeconditions.bindings.envconfiguration.HttpConfigurationEnvItemProperty;
+import io.runtimeconditions.bindings.envconfiguration.KeyValueConfiguration;
+import io.runtimeconditions.bindings.envconfiguration.KeyValueConfigurationAlternatives;
+import io.runtimeconditions.bindings.envconfiguration.KeyValueConfigurationAlternativesItem;
+import io.runtimeconditions.bindings.envconfiguration.KeyValueConfigurationAlternativesItemEnv;
+import io.runtimeconditions.bindings.envconfiguration.KeyValueConfigurationAlternativesItemEnvItem;
+import io.runtimeconditions.bindings.envconfiguration.KeyValueConfigurationAlternativesItemEnvItemProperty;
+import java.util.List;
+
+final class Conditions {
+    static final Object TODOS_API = Bindings.api(
+            new Http(
+                    new HttpOperations(List.of(new HttpOperationsItem(Method.GET, "/todos/{id}", null, null))),
+                    new Spec(Format.OPENAPI, "catalog://api/default/todos-api", null)),
+            new HttpConfiguration(
+                    null,
+                    new HttpConfigurationEnv(List.of(
+                            new HttpConfigurationEnvItem(
+                                    "TODOS_API_URL", HttpConfigurationEnvItemProperty.BASE_URL, null, null)))));
+
+    static final Object REQUEST_CACHE = Bindings.cache(
+            new KeyValue(KeyValueEngine.REDIS),
+            new KeyValueConfiguration(
+                    new KeyValueConfigurationAlternatives(List.of(
+                            new KeyValueConfigurationAlternativesItem(new KeyValueConfigurationAlternativesItemEnv(List.of(
+                                    new KeyValueConfigurationAlternativesItemEnvItem(
+                                            "REDIS_URL", KeyValueConfigurationAlternativesItemEnvItemProperty.URL, null, null)))),
+                            new KeyValueConfigurationAlternativesItem(new KeyValueConfigurationAlternativesItemEnv(List.of(
+                                    new KeyValueConfigurationAlternativesItemEnvItem(
+                                            "REDIS_HOST", KeyValueConfigurationAlternativesItemEnvItemProperty.HOSTNAME, null, null),
+                                    new KeyValueConfigurationAlternativesItemEnvItem(
+                                            "REDIS_PORT", KeyValueConfigurationAlternativesItemEnvItemProperty.PORT, null, null)))))),
+                    null));
 }</code></pre>
+            </div>
+            <h3>3. Use the variables in normal code</h3>
+            <p class="short">The profile records the names <code>TODOS_API_URL</code> and <code>REDIS_URL</code>, not their values. The app reads them as it always did, and the platform supplies them later.</p>
+            <div class="example">
+              <div class="example-title"><span>TodosClient.java</span></div>
+              <pre><code>String baseUrl = System.getenv("TODOS_API_URL");
+if (baseUrl == null || baseUrl.isBlank()) {
+    throw new IllegalStateException("TODOS_API_URL is not set");
+}
+HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + "/todos/1")).build();</code></pre>
+            </div>
+            <h3>4. Run the profiler</h3>
+            <p class="short">These commands use the <code>rc</code> CLI. The <a href="cli.html">rc CLI</a> chapter shows how to install it and lists every command.</p>
+            <div class="example">
+              <div class="example-title"><span>Run</span></div>
+              <pre><code>rc profile java generate \
+  --project . \
+  --resolve-build-classpath \
+  --name request-logger-http \
+  --workload-uri github.com/runtimeconditions/rc-demos/apps/request-logger-http \
+  --workload-version v0.1.0 \
+  --out profile.yaml</code></pre>
+            </div>
+            <p class="short">The profiler needs to know where the binding jars are. <code>--resolve-build-classpath</code> asks your Maven or Gradle build, which <strong>runs your build</strong>, so it only happens when you ask. Without it, pass the jars with <code>--classpath a.jar:b.jar</code>. The profiler reads your source with the JDK's parser and never compiles or runs it.</p>
+          </div>
+          <div class="tab-panel" id="tab-python" role="tabpanel" aria-labelledby="tab-button-python">
+            <h3>1. Add the packages</h3>
+            <p class="short">Install the profiler and the bindings <strong>into the same virtual environment</strong>, because the profiler finds the bindings through that environment. Do not use <code>pipx</code>, which would give it an environment of its own.</p>
+            <p class="short">These two are the packages for Common Integrations and Env Configuration. Every extension has packages in all four languages: see the <a href="extensions.html#binding-packages">Binding packages</a> table.</p>
+            <div class="example">
+              <div class="example-title"><span>Install</span></div>
+              <pre><code>python3 -m venv .venv
+.venv/bin/pip install runtimeconditions-profiler \
+  runtimeconditions-common-integrations \
+  runtimeconditions-env-configuration</code></pre>
+            </div>
+            <h3>2. Declare what the app needs</h3>
+            <p class="short">Each declaration is a call built from generated types, so the compiler checks every field. The calls do nothing when the app runs. The app below needs an HTTP API, with the environment variable that holds its URL, and a Redis cache, with two ways to find it.</p>
+            <div class="example">
+              <div class="example-title"><span>conditions.py</span></div>
+              <pre><code>from runtimeconditions_common_integrations import (
+    Format,
+    Http,
+    HttpOperationsItem,
+    KeyValue,
+    KeyValueEngine,
+    Method,
+    Spec,
+    api,
+    cache,
+)
+from runtimeconditions_env_configuration import (
+    HttpConfiguration,
+    HttpConfigurationEnvItem,
+    HttpConfigurationEnvItemProperty,
+    KeyValueConfiguration,
+    KeyValueConfigurationAlternativesItem,
+    KeyValueConfigurationAlternativesItemEnvItem,
+    KeyValueConfigurationAlternativesItemEnvItemProperty,
+)
+
+api(
+    Http(
+        spec=Spec(format=Format.OPENAPI, uri="catalog://api/default/todos-api"),
+        operations=[HttpOperationsItem(method=Method.GET, path="/todos/{id}")],
+    ),
+    HttpConfiguration(
+        env=[
+            HttpConfigurationEnvItem(
+                name="TODOS_API_URL",
+                property=HttpConfigurationEnvItemProperty.BASE_URL,
+            )
+        ]
+    ),
+)
+
+cache(
+    KeyValue(engine=KeyValueEngine.REDIS),
+    KeyValueConfiguration(
+        alternatives=[
+            KeyValueConfigurationAlternativesItem(
+                env=[
+                    KeyValueConfigurationAlternativesItemEnvItem(
+                        name="REDIS_URL",
+                        property=KeyValueConfigurationAlternativesItemEnvItemProperty.URL,
+                    )
+                ]
+            ),
+            KeyValueConfigurationAlternativesItem(
+                env=[
+                    KeyValueConfigurationAlternativesItemEnvItem(
+                        name="REDIS_HOST",
+                        property=KeyValueConfigurationAlternativesItemEnvItemProperty.HOSTNAME,
+                    ),
+                    KeyValueConfigurationAlternativesItemEnvItem(
+                        name="REDIS_PORT",
+                        property=KeyValueConfigurationAlternativesItemEnvItemProperty.PORT,
+                    ),
+                ]
+            ),
+        ]
+    ),
+)</code></pre>
+            </div>
+            <h3>3. Use the variables in normal code</h3>
+            <p class="short">The profile records the names <code>TODOS_API_URL</code> and <code>REDIS_URL</code>, not their values. The app reads them as it always did, and the platform supplies them later.</p>
+            <div class="example">
+              <div class="example-title"><span>todos_client.py</span></div>
+              <pre><code>import os
+import urllib.request
+
+base_url = os.environ["TODOS_API_URL"].rstrip("/")
+urllib.request.urlopen(f"{base_url}/todos/1")</code></pre>
+            </div>
+            <h3>4. Run the profiler</h3>
+            <p class="short">These commands use the <code>rc</code> CLI. The <a href="cli.html">rc CLI</a> chapter shows how to install it and lists every command.</p>
+            <div class="example">
+              <div class="example-title"><span>Run</span></div>
+              <pre><code>export PATH="$PWD/.venv/bin:$PATH"
+rc profile python generate \
+  --project . \
+  --name request-logger-http \
+  --workload-uri github.com/runtimeconditions/rc-demos/apps/request-logger-http \
+  --workload-version v0.1.0 \
+  --out profile.yaml</code></pre>
+            </div>
+            <p class="short">Python 3.11 or newer. The profiler reads your source and never imports the bindings or runs the app.</p>
+          </div>
+          <div class="tab-panel" id="tab-typescript" role="tabpanel" aria-labelledby="tab-button-typescript">
+            <h3>1. Add the packages</h3>
+            <p class="short">Add the binding packages to your project, and install the profiler. It needs Node.js.</p>
+            <p class="short">These two are the packages for Common Integrations and Env Configuration. Every extension has packages in all four languages: see the <a href="extensions.html#binding-packages">Binding packages</a> table.</p>
+            <div class="example">
+              <div class="example-title"><span>Install</span></div>
+              <pre><code>npm install @runtimeconditions/common-integrations @runtimeconditions/env-configuration
+npm install --global @runtimeconditions/typescript-profiler</code></pre>
+            </div>
+            <h3>2. Declare what the app needs</h3>
+            <p class="short">Each declaration is a call built from generated types, so the compiler checks every field. The calls do nothing when the app runs. The app below needs an HTTP API, with the environment variable that holds its URL, and a Redis cache, with two ways to find it.</p>
+            <div class="example">
+              <div class="example-title"><span>src/conditions.ts</span></div>
+              <pre><code>import {
+  api,
+  cache,
+  Format,
+  Http,
+  HttpOperationsItem,
+  KeyValue,
+  KeyValueEngine,
+  Method,
+  Spec,
+} from "@runtimeconditions/common-integrations";
+import {
+  HttpConfiguration,
+  HttpConfigurationEnvItem,
+  HttpConfigurationEnvItemProperty,
+  KeyValueConfiguration,
+  KeyValueConfigurationAlternativesItem,
+  KeyValueConfigurationAlternativesItemEnvItem,
+  KeyValueConfigurationAlternativesItemEnvItemProperty,
+} from "@runtimeconditions/env-configuration";
+
+api(
+  new Http({
+    spec: new Spec({ format: Format.Openapi, uri: "catalog://api/default/todos-api" }),
+    operations: [new HttpOperationsItem({ method: Method.Get, path: "/todos/{id}" })],
+  }),
+  new HttpConfiguration({
+    env: [
+      new HttpConfigurationEnvItem({
+        name: "TODOS_API_URL",
+        property: HttpConfigurationEnvItemProperty.BaseUrl,
+      }),
+    ],
+  }),
+);
+
+cache(
+  new KeyValue({ engine: KeyValueEngine.Redis }),
+  new KeyValueConfiguration({
+    alternatives: [
+      new KeyValueConfigurationAlternativesItem({
+        env: [
+          new KeyValueConfigurationAlternativesItemEnvItem({
+            name: "REDIS_URL",
+            property: KeyValueConfigurationAlternativesItemEnvItemProperty.Url,
+          }),
+        ],
+      }),
+      new KeyValueConfigurationAlternativesItem({
+        env: [
+          new KeyValueConfigurationAlternativesItemEnvItem({
+            name: "REDIS_HOST",
+            property: KeyValueConfigurationAlternativesItemEnvItemProperty.Hostname,
+          }),
+          new KeyValueConfigurationAlternativesItemEnvItem({
+            name: "REDIS_PORT",
+            property: KeyValueConfigurationAlternativesItemEnvItemProperty.Port,
+          }),
+        ],
+      }),
+    ],
+  }),
+);</code></pre>
+            </div>
+            <h3>3. Use the variables in normal code</h3>
+            <p class="short">The profile records the names <code>TODOS_API_URL</code> and <code>REDIS_URL</code>, not their values. The app reads them as it always did, and the platform supplies them later.</p>
+            <div class="example">
+              <div class="example-title"><span>src/todosClient.ts</span></div>
+              <pre><code>const baseUrl = (process.env.TODOS_API_URL ?? "").replace(/\/$/, "");
+if (!baseUrl) {
+  throw new Error("TODOS_API_URL is not set");
+}
+await fetch(`${baseUrl}/todos/1`);</code></pre>
+            </div>
+            <h3>4. Run the profiler</h3>
+            <p class="short">These commands use the <code>rc</code> CLI. The <a href="cli.html">rc CLI</a> chapter shows how to install it and lists every command.</p>
+            <div class="example">
+              <div class="example-title"><span>Run</span></div>
+              <pre><code>rc profile typescript generate \
+  --project . \
+  --name request-logger-http \
+  --workload-uri github.com/runtimeconditions/rc-demos/apps/request-logger-http \
+  --workload-version v0.1.0 \
+  --out profile.yaml</code></pre>
+            </div>
+            <p class="short">The profiler reads your TypeScript source and never runs it.</p>
+          </div>
           </div>
         </section>
 
         <section class="section">
-          <h2>5. Run the generator against the app directory</h2>
-          <p class="short">The generator parses the Go AST, finds the declaration calls, resolves their arguments, and emits a Runtime Conditions Profile.</p>
+          <h2>The profile every language writes</h2>
+          <p class="short">
+            The four <a href="cli.html#profilers">profilers</a> write the same profile for these declarations. A profiler writes the extensions in the short form, the extension id with its version, and it does not name the Conditions: <code>name</code> is optional, and a hand-written profile can add one. Without <code>--out</code> the profile is printed, and a failed run leaves an existing output file alone.
+          </p>
           <div class="example">
-            <div class="example-title">Command</div>
-            <pre><code>cd go-rc-profiler
-go run . \
-  -dir ../rc-demos/apps/request-logger-http \
-  -name request-logger-http \
-  -workload-uri github.com/runtimeconditions/rc-demos/apps/request-logger-http \
-  -workload-version v0.1.0</code></pre>
-          </div>
-        </section>
-
-        <section class="section">
-          <h2>6. The generated profile contains the same requirements</h2>
-          <div class="example">
-            <div class="example-title">Generated profile excerpt, with full document shape</div>
+            <div class="example-title">profile.yaml</div>
             <pre><code>apiVersion: runtimeconditions.io/v1alpha1
 kind: RuntimeConditionsProfile
-
 metadata:
   name: request-logger-http
-
 workload:
   uri: github.com/runtimeconditions/rc-demos/apps/request-logger-http
   version: v0.1.0
-
 extensions:
-  - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
-  - https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
-
+  - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
+  - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha2
 conditions:
-  - name: todos-api
-    kind: api
+  - kind: api
     interface:
       type: http
-      spec:
-        format: openapi
-        uri: catalog://api/default/todos-api
-        version: 1.0.0
       operations:
         - method: GET
           path: /todos/{id}
+      spec:
+        format: openapi
+        uri: catalog://api/default/todos-api
     configuration:
       env:
-        - property: baseUrl
-          name: TODOS_API_URL
-
-  - name: request-cache
-    kind: cache
+        - name: TODOS_API_URL
+          property: baseUrl
+  - kind: cache
     interface:
       type: key_value
       engine: redis
     configuration:
       alternatives:
         - env:
-            - property: url
-              name: REDIS_URL</code></pre>
-          </div>
-        </section>
-
-        <section class="section">
-          <h2>7. Java starts from Maven and Gradle artifacts</h2>
-          <p class="short">
-            The Java profiler discovers Runtime Conditions metadata from Maven and Gradle project layouts, resolved classpath directories, and JAR resources. It currently generates profiles from declarative Java binding packages; SDK/runtime package extraction is intentionally deferred.
-          </p>
-          <div class="example">
-            <div class="example-title">Java artifact resource layout</div>
-            <pre><code>META-INF/runtimeconditions/runtimeconditions.bindings.yaml
-META-INF/runtimeconditions/runtimeconditions.package.yaml
-META-INF/runtimeconditions/runtimeconditions.extension.yaml</code></pre>
-          </div>
-          <div class="example">
-            <div class="example-title">Profile generation command</div>
-            <pre><code>cd java-rc-profiler
-mvn -q package
-
-java -jar target/runtimeconditions-java-profiler-0.1.0-SNAPSHOT.jar generate \
-  --project src/testdata/declarative-app \
-  --classpath ../extensions/catalog/rc/common-integrations/java:../extensions/catalog/rc/env-configuration/java \
-  --name java-declarative-app \
-  --workload-uri example/java-declarative-app \
-  --workload-version test</code></pre>
+            - name: REDIS_URL
+              property: url
+        - env:
+            - name: REDIS_HOST
+              property: hostname
+            - name: REDIS_PORT
+              property: port</code></pre>
           </div>
         </section>
 
@@ -251,10 +493,11 @@ java -jar target/runtimeconditions-java-profiler-0.1.0-SNAPSHOT.jar generate \
 
     <footer class="footer">
       <div class="footer-inner">
-        <span>Chapter 3 of 7</span>
+        <span>Chapter 3 of 9</span>
         <a href="extensions.html">Continue</a>
       </div>
     </footer>
+    <script src="assets/tabs.js" defer></script>
     <script src="assets/syntax.js" defer></script>
   </body>
 </html>

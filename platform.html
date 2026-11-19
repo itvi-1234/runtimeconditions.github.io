@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Adapters | Runtime Conditions</title>
     <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/theme.js"></script>
   </head>
   <body>
     <header class="site-header">
@@ -29,34 +30,51 @@
           <li><a href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
           <li><a href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
           <li><a href="extensions.html"><span class="num">04</span><span>Extensions</span></a></li>
-          <li><a aria-current="page" href="platform.html"><span class="num">05</span><span>Adapters</span></a></li>
-          <li><a href="demo.html"><span class="num">06</span><span>Run the demo</span></a></li>
-          <li><a href="reference.html"><span class="num">07</span><span>Reference</span></a></li>
+          <li><a href="cli.html"><span class="num">05</span><span>rc CLI</span></a></li>
+          <li><a aria-current="page" href="platform.html"><span class="num">06</span><span>Adapters</span></a></li>
+          <li><a href="demo.html"><span class="num">07</span><span>Run the demo</span></a></li>
+          <li><a href="reference.html"><span class="num">08</span><span>Reference</span></a></li>
+          <li><a href="faq.html"><span class="num">09</span><span>FAQ</span></a></li>
         </ol>
       </aside>
 
       <main class="content">
-        <p class="chapter-label">Chapter 5</p>
-        <h1 class="page-title">Adapters are where profile demand becomes platform action.</h1>
+        <p class="chapter-label">Chapter 6</p>
+        <h1 class="page-title">An adapter turns a profile into platform action.</h1>
         <p class="intro">
-          A valid profile is still just a requirements document. The adapter is the platform-specific component that decides how those requirements are satisfied and wired into the workload.
+          A <a href="spec.html">profile</a> only says what an app needs. An adapter is what one platform builds to read a profile and provide those needs. This chapter follows the adapter from the demo, which runs on <a href="https://kratix.io">Kratix</a>. Other platforms build their own, and the specification says what an adapter must do in <a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#95-adapter-conformance">Adapter conformance</a>.
         </p>
 
         <section class="section">
-          <h2>Adapter responsibility</h2>
+          <h2>What an adapter does</h2>
           <ol class="step-list">
-            <li><span class="step-num">1</span><div><strong>Read a valid profile.</strong><span>The adapter starts from Conditions and their declared `configuration.env` inputs.</span></div></li>
-            <li><span class="step-num">2</span><div><strong>Validate against platform context.</strong><span>In the demo, API Conditions are checked against a catalog OpenAPI document.</span></div></li>
-            <li><span class="step-num">3</span><div><strong>Invoke provider interfaces.</strong><span>For Redis, the adapter emits a platform-owned resource request with resolved inputs.</span></div></li>
-            <li><span class="step-num">4</span><div><strong>Bind platform values.</strong><span>The adapter maps profile env names to service URLs and generated resource addresses.</span></div></li>
-            <li><span class="step-num">5</span><div><strong>Render workload deployment.</strong><span>The final Deployment contains target-specific references, but the profile remains target-neutral.</span></div></li>
+            <li><span class="step-num">1</span><div><strong>Read the profile.</strong><span>The adapter starts from the <a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md#4-condition-model">Conditions</a> and the environment variable names the app reads.</span></div></li>
+            <li><span class="step-num">2</span><div><strong>Check it against the platform.</strong><span>In the demo, API Conditions are checked against a catalog OpenAPI document.</span></div></li>
+            <li><span class="step-num">3</span><div><strong>Ask the platform for what is needed.</strong><span>For Redis, the adapter sends a request that the <a href="https://github.com/runtimeconditions/rc-demos/blob/main/kratix/manifests/promises/redis.yaml">Redis Promise</a> fulfils.</span></div></li>
+            <li><span class="step-num">4</span><div><strong>Fill in the values.</strong><span>The adapter sets each variable the profile names, such as <code>REDIS_URL</code>, to the address of what was created.</span></div></li>
+            <li><span class="step-num">5</span><div><strong>Render the deployment.</strong><span>The final Deployment holds platform-specific addresses, but the profile stays the same on every platform.</span></div></li>
           </ol>
+          <p class="short">
+            An adapter calls the platform's existing provider interfaces directly. In the demo those are Kratix Promises. The adapter does not create another Runtime Conditions document between itself and a Promise. This is what each requirement leads to:
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Profile Requirement</th><th>Adapter Calls</th><th>Provider Owns</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>kind: cache</code>, <code>engine: redis</code></td><td><a href="https://github.com/runtimeconditions/rc-demos/blob/main/kratix/manifests/promises/redis.yaml">Redis Promise</a> interface</td><td>Redis Deployment and Service</td></tr>
+                <tr><td><code>kind: api</code>, <code>interface.type: http</code></td><td><a href="https://github.com/runtimeconditions/rc-demos/blob/main/kratix/manifests/catalog/todos-api-catalog.yaml">API catalog</a> validation</td><td>Catalog-owned OpenAPI document and base URL</td></tr>
+                <tr><td><code>ApplicationRelease</code> request</td><td>Kubernetes workload renderer</td><td>Deployment and Service for the application</td></tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section class="section">
-          <h2>Adapter input: a profile Condition</h2>
+          <h2 id="step-1">1. Read the profile</h2>
           <p class="short">
-            The adapter is not guessing from the application source. It receives the generated profile and interprets Conditions that have already passed validation.
+            The adapter does not read the application source. It receives the profile, and reads Conditions that have already been <a href="spec.html#validation-order">validated</a>.
           </p>
           <div class="example">
             <div class="example-title">Cache Condition from the profile</div>
@@ -76,71 +94,32 @@
           - property: port
             name: REDIS_PORT</code></pre>
           </div>
+          <p class="short">
+            The demo adapter needs every Condition to have a <code>name</code> and a <code>kind</code>, so the demo's profile names its Conditions. A profile written by a <a href="developers.html">profiler</a> can leave names out, because <code>name</code> is optional, so add them before you give such a profile to this adapter.
+          </p>
         </section>
 
         <section class="section">
-          <h2>Adapter step: choose platform values for profile properties</h2>
+          <h2 id="step-2">2. Check it against the platform</h2>
           <p class="short">
-            The Redis Promise owns Redis provisioning. The adapter emits a Redis request and satisfies profile properties from the generated service address.
+            The API Condition declares <code>GET /todos/{id}</code> and an expected response shape. The adapter compares that requirement with the catalog OpenAPI document before creating the workload.
           </p>
           <div class="example">
             <div class="example-title">
-              <span>ApplicationRelease adapter resolver</span>
+              <span>API validation path</span>
               <a href="https://github.com/runtimeconditions/rc-demos/blob/main/kratix/promises/application-release/pipeline/resolver.py">source</a>
             </div>
-            <pre><code>emitted.append(redis_request(redis_name, namespace, name))
-redis_host = f"{redis_name}.{namespace}.svc.cluster.local"
-env.extend(
-  [
-    {"name": "REDIS_URL", "value": f"redis://{redis_host}:6379"},
-    {"name": "REDIS_HOST", "value": redis_host},
-    {"name": "REDIS_PORT", "value": "6379"},
-  ]
-)</code></pre>
+            <pre><code>api = validate_api_condition(condition, apis)
+base_url = api.base_url or f"http://{api.name}.{namespace}.svc.cluster.local:{port}"
+bound = bind_env(item.env, {"baseUrl": base_url})
+env.extend(bound)</code></pre>
           </div>
         </section>
 
         <section class="section">
-          <h2>Adapter step: validate API compatibility before deployment</h2>
+          <h2 id="step-3">3. Ask the platform for what is needed</h2>
           <p class="short">
-            The API Condition declares `GET /todos/{id}` and an expected response shape. The adapter compares that requirement with the catalog OpenAPI document before creating the workload.
-          </p>
-          <div class="example">
-            <div class="example-title">API validation path</div>
-            <pre><code>for condition in conditions:
-  if condition.get("kind") != "api":
-    continue
-
-  api = validate_api_condition(condition, apis)
-  env_name = api_url_env_name(condition.get("name") or api.name)
-  base_url = api.base_url or f"http://{api.name}.{namespace}.svc.cluster.local:{port}"
-  env.append({"name": env_name, "value": base_url})</code></pre>
-          </div>
-        </section>
-
-        <section class="section">
-          <h2>Adapter step: call platform interfaces, not invent a second profile</h2>
-          <p class="short">
-            The adapter should trigger existing provider interfaces directly. In this demo those interfaces are Kratix Promises. The important boundary is that the adapter is not creating another Runtime Conditions document between itself and the Promise.
-          </p>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>Profile Requirement</th><th>Adapter Calls</th><th>Provider Owns</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>`kind: cache`, `engine: redis`</td><td>Redis Promise interface</td><td>Redis Deployment and Service</td></tr>
-                <tr><td>`kind: api`, `interface.type: http`</td><td>API catalog validation</td><td>Catalog-owned OpenAPI document and base URL</td></tr>
-                <tr><td>`ApplicationRelease` request</td><td>Kubernetes workload renderer</td><td>Deployment and Service for the application</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="section">
-          <h2>Provider request: Redis custom resource</h2>
-          <p class="short">
-            The adapter asks the platform for Redis by emitting the provider-owned resource. The profile declares `kind: cache`; the platform decides what Redis means in the cluster.
+            The adapter asks the platform for Redis by emitting the provider-owned resource. The profile declares <code>kind: cache</code>; the platform decides what Redis means in the cluster.
           </p>
           <div class="example">
             <div class="example-title">
@@ -153,13 +132,35 @@ metadata:
   namespace: demo
   labels:
     kratix.io/component-of-promise-name: application-release
+    kratix.io/component-of-resource-name: request-logger
+    kratix.io/component-of-resource-namespace: demo
 spec:
   size: small</code></pre>
           </div>
         </section>
 
         <section class="section">
-          <h2>Final workload binding</h2>
+          <h2 id="step-4">4. Fill in the values</h2>
+          <p class="short">
+            The Redis Promise owns Redis provisioning. The adapter requests a Redis, works out its address, and sets each variable the profile names: <code>url</code>, <code>hostname</code>, and <code>port</code> become the values of <code>REDIS_URL</code>, <code>REDIS_HOST</code>, and <code>REDIS_PORT</code>.
+          </p>
+          <div class="example">
+            <div class="example-title">
+              <span>ApplicationRelease adapter resolver</span>
+              <a href="https://github.com/runtimeconditions/rc-demos/blob/main/kratix/promises/application-release/pipeline/resolver.py">source</a>
+            </div>
+            <pre><code>emitted.append(redis_request(redis_name, namespace, name))
+redis_host = f"{redis_name}.{namespace}.svc.cluster.local"
+bound = bind_env(
+  item.env,
+  {"url": f"redis://{redis_host}:6379", "hostname": redis_host, "port": "6379"},
+)
+env.extend(bound)</code></pre>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 id="step-5">5. Render the deployment</h2>
           <p class="short">
             This is where the profile's environment variable names meet platform-provided values. The application still reads the same env vars it declared in source.
           </p>
@@ -188,16 +189,19 @@ spec:
                 <tr><th>Component</th><th>Owns</th><th>Does Not Own</th></tr>
               </thead>
               <tbody>
-                <tr><td>Generator</td><td>Source-to-profile extraction.</td><td>Provisioning, deployment, target values.</td></tr>
-                <tr><td>Adapter</td><td>Profile interpretation for one platform.</td><td>Extension vocabulary or provider internals.</td></tr>
-                <tr><td>Promise</td><td>Concrete provider implementation.</td><td>Application source analysis or profile generation.</td></tr>
+                <tr><td><a href="developers.html">Profiler</a></td><td>Source-to-profile extraction.</td><td>Provisioning, deployment, target values.</td></tr>
+                <tr><td>Adapter</td><td>Profile interpretation for one platform.</td><td><a href="extensions.html">Extension vocabulary</a> or provider internals.</td></tr>
+                <tr><td><a href="https://github.com/runtimeconditions/rc-demos/tree/main/kratix/promises">Promise</a></td><td>Concrete provider implementation.</td><td>Application source analysis or profile generation.</td></tr>
               </tbody>
             </table>
           </div>
+          <p class="short">
+            To run all of this yourself, see <a href="demo.html">Run the demo</a>.
+          </p>
         </section>
 
         <nav class="page-nav" aria-label="Page navigation">
-          <a href="extensions.html">Previous: Extensions</a>
+          <a href="cli.html">Previous: rc CLI</a>
           <a href="demo.html">Next: Run the demo</a>
         </nav>
       </main>
@@ -205,7 +209,7 @@ spec:
 
     <footer class="footer">
       <div class="footer-inner">
-        <span>Chapter 5 of 7</span>
+        <span>Chapter 6 of 9</span>
         <a href="demo.html">Continue</a>
       </div>
     </footer>

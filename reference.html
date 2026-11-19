@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Reference | Runtime Conditions</title>
     <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/theme.js"></script>
   </head>
   <body>
     <header class="site-header">
@@ -29,9 +30,11 @@
           <li><a href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
           <li><a href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
           <li><a href="extensions.html"><span class="num">04</span><span>Extensions</span></a></li>
-          <li><a href="platform.html"><span class="num">05</span><span>Adapters</span></a></li>
-          <li><a href="demo.html"><span class="num">06</span><span>Run the demo</span></a></li>
-          <li><a aria-current="page" href="reference.html"><span class="num">07</span><span>Reference</span></a></li>
+          <li><a href="cli.html"><span class="num">05</span><span>rc CLI</span></a></li>
+          <li><a href="platform.html"><span class="num">06</span><span>Adapters</span></a></li>
+          <li><a href="demo.html"><span class="num">07</span><span>Run the demo</span></a></li>
+          <li><a aria-current="page" href="reference.html"><span class="num">08</span><span>Reference</span></a></li>
+          <li><a href="faq.html"><span class="num">09</span><span>FAQ</span></a></li>
         </ol>
       </aside>
 
@@ -46,8 +49,8 @@
           <h2>Current spec, first-party extensions, and examples</h2>
           <ul class="link-list">
             <li><a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md">Core Runtime Conditions Profile draft</a></li>
-            <li><a href="https://github.com/runtimeconditions/extensions/tree/main/common-integrations">Common Integrations extension</a></li>
-            <li><a href="https://github.com/runtimeconditions/extensions/tree/main/env-configuration">Environment Configuration extension</a></li>
+            <li><a href="https://github.com/runtimeconditions/extensions/tree/main/catalog/rc/common-integrations">Common Integrations extension</a></li>
+            <li><a href="https://github.com/runtimeconditions/extensions/tree/main/catalog/rc/env-configuration">Environment Configuration extension</a></li>
             <li><a href="https://github.com/runtimeconditions/spec/tree/main/examples/extensions/aws-object-store">AWS Object Store third-party extension example</a></li>
           </ul>
         </section>
@@ -67,18 +70,25 @@
           <h2>Working demo implementation</h2>
           <ul class="link-list">
             <li><a href="https://github.com/runtimeconditions/rc-demos/blob/main/apps/request-logger-http/main.go">Request logger workload source</a></li>
-            <li><a href="https://github.com/runtimeconditions/go-rc-profiler">Go generator CLI</a></li>
+            <li><a href="https://github.com/runtimeconditions/rc-demos/tree/main/apps/request-logger-http-java">Request logger workload in Java</a></li>
+            <li><a href="https://github.com/runtimeconditions/rc-demos/tree/main/apps/request-logger-http-python">Request logger workload in Python</a></li>
+            <li><a href="https://github.com/runtimeconditions/extensions/tree/main/bindings">Binding packages for Go, Python, TypeScript, and Java</a></li>
+            <li><a href="https://github.com/runtimeconditions/rc-cli">rc CLI</a></li>
+            <li><a href="https://github.com/runtimeconditions/go-rc-profiler">Go profiler</a></li>
+            <li><a href="https://github.com/runtimeconditions/java-rc-profiler">Java profiler</a></li>
+            <li><a href="https://github.com/runtimeconditions/ts-rc-profiler">TypeScript profiler</a></li>
+            <li><a href="https://github.com/runtimeconditions/python-rc-profiler">Python profiler</a></li>
             <li><a href="https://github.com/runtimeconditions/spec/tree/main/examples/sdks/aws-sdk-go-v2/service/s3">Example AWS SDK package manifest</a></li>
             <li><a href="https://github.com/runtimeconditions/rc-demos/tree/main/kratix/promises">Kratix Promise pipeline source</a></li>
             <li><a href="https://github.com/runtimeconditions/rc-demos/blob/main/kratix/manifests/promises/application-release.yaml">ApplicationRelease Promise manifest</a></li>
-            <li><a href="https://github.com/runtimeconditions/rc-demos/blob/main/kratix/manifests/apps/request-logger-application-release.yaml">Request logger ApplicationRelease manifest</a></li>
+            <li><a href="https://github.com/runtimeconditions/rc-demos/blob/main/kratix/scripts/materialize-application-release.sh">Script that renders the request logger ApplicationRelease</a></li>
             <li><a href="https://github.com/runtimeconditions/rc-demos/blob/main/kratix/manifests/catalog/todos-api-catalog.yaml">API catalog ConfigMap manifest</a></li>
           </ul>
         </section>
 
         <nav class="page-nav" aria-label="Page navigation">
           <a href="demo.html">Previous: Run the demo</a>
-          <a href="index.html">Back to start</a>
+          <a href="faq.html">Next: FAQ</a>
         </nav>
       </main>
     </div>
@@ -86,7 +96,7 @@
     <footer class="footer">
       <div class="footer-inner">
         <span>Appendix</span>
-        <a href="index.html">Restart guide</a>
+        <a href="faq.html">Continue</a>
       </div>
     </footer>
     <script src="assets/syntax.js" defer></script>

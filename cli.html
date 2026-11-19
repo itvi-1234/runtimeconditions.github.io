@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>rc CLI | Runtime Conditions</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/theme.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html">Runtime Conditions</a>
+        <nav class="top-links" aria-label="Top links">
+          <a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md" data-tip="Read the latest draft of the specification"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h6"/></svg><span>Current Draft</span></a>
+          <a href="https://github.com/runtimeconditions/rc-demos/blob/main/README.md" data-tip="Run Runtime Conditions end to end on your own machine"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg><span>Run Demo</span></a>
+          <a href="reference.html" data-tip="See where each part of this guide comes from in the source repositories"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15"/><path d="M15 6v15"/></svg><span>Source Map</span></a>
+          <a href="https://github.com/runtimeconditions" data-tip="Browse the Runtime Conditions repositories on GitHub"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span>GitHub</span></a>
+          <a href="https://cloud-native.slack.com/archives/C0C0R4M65FZ" data-tip="Join the conversation on the CNCF Slack"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 9h16"/><path d="M4 15h16"/><path d="M10 3L8 21"/><path d="M16 3l-2 18"/></svg><span>Slack</span></a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="guide-layout">
+      <aside class="sidebar" aria-label="Guide chapters">
+        <p class="sidebar-title">Reader Guide</p>
+        <ol class="chapter-list">
+          <li><a href="index.html"><span class="num">00</span><span>Start here</span></a></li>
+          <li><a href="concepts.html"><span class="num">01</span><span>Core concepts</span></a></li>
+          <li><a href="spec.html"><span class="num">02</span><span>Profile shape</span></a></li>
+          <li><a href="developers.html"><span class="num">03</span><span>Code to profile</span></a></li>
+          <li><a href="extensions.html"><span class="num">04</span><span>Extensions</span></a></li>
+          <li><a aria-current="page" href="cli.html"><span class="num">05</span><span>rc CLI</span></a></li>
+          <li><a href="platform.html"><span class="num">06</span><span>Adapters</span></a></li>
+          <li><a href="demo.html"><span class="num">07</span><span>Run the demo</span></a></li>
+          <li><a href="reference.html"><span class="num">08</span><span>Reference</span></a></li>
+          <li><a href="faq.html"><span class="num">09</span><span>FAQ</span></a></li>
+        </ol>
+      </aside>
+
+      <main class="content">
+        <p class="chapter-label">Chapter 5</p>
+        <h1 class="page-title">One command line for profiling, validation, and bindings.</h1>
+        <p class="intro">
+          <code>rc</code> has the Go profiler built in, runs the profilers of other languages as add-ons, validates any profile, and generates the binding packages that code declares against.
+        </p>
+
+        <section class="section">
+          <h2 id="get-rc">1. Get rc</h2>
+          <p class="short">Install it with Homebrew, with apt or dnf on Linux, download a release from <a href="https://github.com/runtimeconditions/rc-cli/releases">runtimeconditions/rc-cli</a>, or build it from a checkout, which embeds the pinned core profile schema.</p>
+          <div class="example">
+            <div class="example-title">Homebrew</div>
+            <pre><code>brew install runtimeconditions/tools/rc-cli
+rc --version</code></pre>
+          </div>
+          <div class="example">
+            <div class="example-title">Linux: apt, dnf, and yum</div>
+            <pre><code>curl -fsSL https://runtimeconditions.io/packages/setup.sh | sudo sh
+sudo apt install rc-cli     # Debian, Ubuntu
+sudo dnf install rc-cli     # Fedora, RHEL, Rocky, AlmaLinux (yum on older systems)</code></pre>
+          </div>
+          <p class="short">The setup script only adds the signed Runtime Conditions package source for your distribution and prints the install command, and it needs <code>sudo</code>. It supports amd64 and arm64. The same source carries the Java and TypeScript profilers as <code>rc-profiler-java</code> and <code>rc-profiler-typescript</code>.</p>
+          <div class="example">
+            <div class="example-title">Build from source</div>
+            <pre><code>go run ./scripts/build.go --output ./rc
+./rc --version</code></pre>
+          </div>
+          <p class="short">Profiling Go needs a working Go toolchain and the workload's binding dependencies. The workload is analyzed, never executed.</p>
+        </section>
+
+        <section class="section">
+          <h2>2. Profile a Go workload</h2>
+          <div class="example">
+            <div class="example-title">Built-in Go profiler</div>
+            <pre><code>rc profile generate --dir ./service --out profile.yaml
+
+# the same, with every option
+rc profile go generate \
+  --dir ./service \
+  --name my-workload \
+  --workload-uri https://example.com/my-workload \
+  --workload-version 1.0.0 \
+  --out profile.yaml</code></pre>
+          </div>
+          <p class="short">Without <code>--out</code> the profile is printed. A failed run leaves an existing output file unchanged. <code>rc profile validate-extensions</code> and <code>rc profile validate-extension</code> check the imported binding packages.</p>
+        </section>
+
+        <section class="section">
+          <h2 id="validate">3. Validate any profile</h2>
+          <p class="short">A profile does not have to come from a profiler. Check one written by hand, or by an agent, against the core profile schema and the extensions it declares.</p>
+          <div class="example">
+            <div class="example-title">Validate</div>
+            <pre><code>rc profile validate profile.yaml</code></pre>
+          </div>
+          <p class="short">Extension definitions are downloaded from their ids, or read from directories given with <code>--catalog</code>.</p>
+        </section>
+
+        <section class="section">
+          <h2>4. Other languages are add-ons</h2>
+          <p class="short">Go is built into <code>rc</code>. For every other language, <code>rc profile &lt;language&gt;</code> hands the work to a separate profiler and passes everything after the language name through unchanged, so each profiler keeps its own flags.</p>
+          <div class="example">
+            <div class="example-title">Run an add-on</div>
+            <pre><code>rc profile java generate --project ./service --resolve-build-classpath --out profile.yaml
+rc profile python generate --project ./service --name orders --workload-uri https://example.com/orders
+rc profile typescript generate --project ./service --name orders --workload-uri https://example.com/orders</code></pre>
+          </div>
+          <p class="short">To find the add-on, <code>rc</code> looks for an executable on <code>PATH</code>. An environment variable can point to a specific file instead.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Language</th><th>Executable on PATH</th><th>Or set</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>TypeScript</td><td><code>rc-profiler-typescript</code>, then <code>runtimeconditions-typescript-profiler</code></td><td><code>RC_TYPESCRIPT_PROFILER</code></td></tr>
+                <tr><td>Java</td><td><code>rc-profiler-java</code></td><td><code>RC_JAVA_PROFILER</code></td></tr>
+                <tr><td>Python</td><td><code>runtimeconditions-python-profiler</code></td><td><code>RC_PYTHON_PROFILER</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="short"><strong>Compatibility.</strong> <code>rc</code> runs an add-on only when its <code>--version --json</code> output lists the core profile schema that <code>rc</code> targets.</p>
+          <p class="short"><strong>Java.</strong> The launcher picks the JDK, not <code>rc</code>: <code>RC_JAVA_HOME</code>, then <code>JAVA_HOME</code>, then a bundled runtime, then <code>java</code> on <code>PATH</code>. It needs JDK 17 or newer.</p>
+          <p class="short"><strong>Python.</strong> The profiler finds the bindings in the environment it is installed in. Install it into the workload's virtual environment and put that environment's <code>bin</code> directory on <code>PATH</code>.</p>
+          <p class="short"><strong>Check.</strong> <code>rc plugins list</code> shows each add-on's status, version and path.</p>
+        </section>
+
+        <section class="section" id="profilers">
+          <h2>5. Profilers and how to install them</h2>
+          <p class="short">Each profiler reads source without running it, checks the binding packages it finds, and writes the same profile for the same declarations. <code>rc profile &lt;language&gt;</code> runs the one you installed.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Language</th><th>Profiler</th><th>Install</th><th>Needs</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Go</td>
+                  <td>Built into <code>rc</code> (<a href="https://github.com/runtimeconditions/go-rc-profiler">go-rc-profiler</a>)</td>
+                  <td class="cmds"><div><code>brew install runtimeconditions/tools/rc-cli</code></div><div><code>sudo apt install rc-cli</code></div><div><code>sudo dnf install rc-cli</code></div></td>
+                  <td>A Go toolchain</td>
+                </tr>
+                <tr>
+                  <td>Java</td>
+                  <td><a href="https://github.com/runtimeconditions/java-rc-profiler">java-rc-profiler</a> <code>rc-profiler-java</code></td>
+                  <td class="cmds"><div><code>brew install runtimeconditions/tools/rc-profiler-java</code></div><div><code>sudo apt install rc-profiler-java</code></div><div><code>sudo dnf install rc-profiler-java</code></div><div class="cmd-note">or the jar from its <a href="https://github.com/runtimeconditions/java-rc-profiler/releases">releases</a></div></td>
+                  <td>JDK 17 or newer</td>
+                </tr>
+                <tr>
+                  <td>Python</td>
+                  <td><a href="https://pypi.org/project/runtimeconditions-profiler/">runtimeconditions-profiler</a> (<a href="https://github.com/runtimeconditions/python-rc-profiler">source</a>)</td>
+                  <td class="cmds"><div><code>pip install runtimeconditions-profiler</code></div><div class="cmd-note">in the workload's virtual environment</div></td>
+                  <td>Python 3.11 or newer</td>
+                </tr>
+                <tr>
+                  <td>TypeScript</td>
+                  <td><a href="https://www.npmjs.com/package/@runtimeconditions/typescript-profiler">@runtimeconditions/typescript-profiler</a> (<a href="https://github.com/runtimeconditions/ts-rc-profiler">source</a>)</td>
+                  <td class="cmds"><div><code>npm install --global @runtimeconditions/typescript-profiler</code></div><div><code>brew install runtimeconditions/tools/rc-profiler-typescript</code></div><div><code>sudo apt install rc-profiler-typescript</code></div><div><code>sudo dnf install rc-profiler-typescript</code></div></td>
+                  <td>Node.js</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="short"><code>apt</code> is for Debian and Ubuntu, <code>dnf</code> for Fedora, RHEL, Rocky, and AlmaLinux; both need the package source from <a href="#get-rc">Get rc</a>. The binding packages each profiler reads are listed on the <a href="extensions.html#binding-packages">Extensions</a> page.</p>
+        </section>
+
+        <section class="section">
+          <h2 id="bindings">6. Generate and verify bindings</h2>
+          <p class="short">The binding commands resolve extension definitions, generate binding packages, and check that committed packages still match.</p>
+          <div class="example">
+            <div class="example-title">Binding commands</div>
+            <pre><code>rc bindings resolve | normalize | generate | verify
+rc bindings package | plan-release | check | update</code></pre>
+          </div>
+          <p class="short"><code>generate</code> writes into a new or empty directory. <code>update</code> verifies candidates before it changes committed bindings, and <code>check</code> compares regenerated content without changing it. Use <code>--target package-key:language</code> to limit the targets. Run <code>rc bindings --help</code> for the flags.</p>
+        </section>
+
+        <nav class="page-nav" aria-label="Page navigation">
+          <a href="extensions.html">Previous: Extensions</a>
+          <a href="platform.html">Next: Adapters</a>
+        </nav>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>Chapter 5 of 9</span>
+        <a href="platform.html">Continue</a>
+      </div>
+    </footer>
+    <script src="assets/syntax.js" defer></script>
+  </body>
+</html>
