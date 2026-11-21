@@ -19,6 +19,22 @@
   const system = window.matchMedia("(prefers-color-scheme: dark)");
   const current = () => root.dataset.theme || (system.matches ? "dark" : "light");
 
+  const LEVEL_KEY = { dark: "rc-dark-level", light: "rc-light-level" };
+  const LEVEL_DEFAULT = 40;
+  const readLevel = (theme) => {
+    try {
+      const raw = localStorage.getItem(LEVEL_KEY[theme]);
+      const n = Number(raw);
+      return raw !== null && n >= 0 && n <= 100 ? n : null;
+    } catch {
+      return null;
+    }
+  };
+  for (const theme of ["dark", "light"]) {
+    const saved = readLevel(theme);
+    if (saved !== null) root.style.setProperty(`--${theme}-level`, String(saved));
+  }
+
   // Set before the page paints, so a reader who chose a theme never sees the other one flash.
   const saved = read();
   if (saved) root.dataset.theme = saved;
@@ -39,6 +55,7 @@
       button.setAttribute("aria-label", dark ? "Switch to the light theme" : "Switch to the dark theme");
       button.dataset.tip = dark ? "Switch to the light theme" : "Switch to the dark theme";
       label.textContent = dark ? "Light" : "Dark";
+      syncSlider();
     };
     button.addEventListener("click", () => {
       const next = current() === "dark" ? "light" : "dark";
@@ -46,7 +63,29 @@
       write(next);
       update();
     });
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = "0";
+    slider.max = "100";
+    slider.className = "theme-level";
+    const syncSlider = () => {
+      const theme = current();
+      slider.value = String(readLevel(theme) ?? LEVEL_DEFAULT);
+      const text = theme === "dark" ? "Dark theme brightness" : "Light theme softness";
+      slider.title = text;
+      slider.setAttribute("aria-label", text);
+    };
+    slider.addEventListener("input", () => {
+      const theme = current();
+      root.style.setProperty(`--${theme}-level`, slider.value);
+      try {
+        localStorage.setItem(LEVEL_KEY[theme], slider.value);
+      } catch {
+        /* The setting only lasts for this page when storage is blocked. */
+      }
+    });
     system.addEventListener("change", update);
+    links.appendChild(slider);
     links.appendChild(button);
     update();
   });

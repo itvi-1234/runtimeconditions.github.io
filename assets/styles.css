@@ -1,13 +1,14 @@
 :root {
   color-scheme: light;
-  --bg: #ffffff;
-  --header-bg: rgba(247, 247, 251, 0.96);
-  --chip-bg: #f2f3f9;
-  --surface: #ffffff;
-  --surface-2: #f0f1f8;
+  /* --light-level (0 to 100) is set by the slider in the header: 0 is pure white, 100 the softest off-white. */
+  --bg: color-mix(in srgb, #ffffff, #e9ebf3 calc(var(--light-level) * 1%));
+  --header-bg: color-mix(in srgb, var(--bg) 96%, transparent);
+  --chip-bg: color-mix(in srgb, #f2f3f9, #e3e5f0 calc(var(--light-level) * 1%));
+  --surface: color-mix(in srgb, #ffffff, #f6f7fb calc(var(--light-level) * 1%));
+  --surface-2: color-mix(in srgb, #f0f1f8, #e4e6f1 calc(var(--light-level) * 1%));
   --ink: #171827;
   --muted: #606477;
-  --line: #d9dbea;
+  --line: color-mix(in srgb, #d9dbea, #c9ccdf calc(var(--light-level) * 1%));
   --accent: #76b900;
   --accent-2: #4f8f00;
   --accent-soft: #efffce;
@@ -22,6 +23,8 @@
   --code-type: #7dd3fc;
   --code-func: #f0abfc;
   --radius: 8px;
+  --dark-level: 40;
+  --light-level: 40;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -31,35 +34,37 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #0d0e18;
-    --header-bg: rgba(13, 14, 24, 0.9);
-    --chip-bg: #1e2037;
-      --surface: #151625;
-    --surface-2: #1c1d31;
-    --ink: #e9eaf6;
-    --muted: #9fa3bd;
-    --line: #2a2c45;
+    /* --dark-level (0 to 100) is set by the slider in the header: 0 is the darkest, 100 the lightest. */
+    --bg: color-mix(in srgb, #0d0e18, #2e3150 calc(var(--dark-level) * 1%));
+    --header-bg: color-mix(in srgb, var(--bg) 92%, transparent);
+    --chip-bg: color-mix(in srgb, #1e2037, #474b72 calc(var(--dark-level) * 1%));
+    --surface: color-mix(in srgb, #151625, #383b5c calc(var(--dark-level) * 1%));
+    --surface-2: color-mix(in srgb, #1c1d31, #41446a calc(var(--dark-level) * 1%));
+    --ink: #eceef9;
+    --muted: #aaaec7;
+    --line: color-mix(in srgb, #2a2c45, #55597f calc(var(--dark-level) * 1%));
     --accent-2: #8cd11d;
     --accent-soft: rgba(118, 185, 0, 0.15);
     --accent-ink: #cfee94;
-    --code-bg: #090a13;
+    --code-bg: color-mix(in srgb, #090a13, #1e2038 calc(var(--dark-level) * 1%));
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0d0e18;
-  --header-bg: rgba(13, 14, 24, 0.9);
-  --chip-bg: #1e2037;
-  --surface: #151625;
-  --surface-2: #1c1d31;
-  --ink: #e9eaf6;
-  --muted: #9fa3bd;
-  --line: #2a2c45;
+  /* --dark-level (0 to 100) is set by the slider in the header: 0 is the darkest, 100 the lightest. */
+  --bg: color-mix(in srgb, #0d0e18, #2e3150 calc(var(--dark-level) * 1%));
+  --header-bg: color-mix(in srgb, var(--bg) 92%, transparent);
+  --chip-bg: color-mix(in srgb, #1e2037, #474b72 calc(var(--dark-level) * 1%));
+  --surface: color-mix(in srgb, #151625, #383b5c calc(var(--dark-level) * 1%));
+  --surface-2: color-mix(in srgb, #1c1d31, #41446a calc(var(--dark-level) * 1%));
+  --ink: #eceef9;
+  --muted: #aaaec7;
+  --line: color-mix(in srgb, #2a2c45, #55597f calc(var(--dark-level) * 1%));
   --accent-2: #8cd11d;
   --accent-soft: rgba(118, 185, 0, 0.15);
   --accent-ink: #cfee94;
-  --code-bg: #090a13;
+  --code-bg: color-mix(in srgb, #090a13, #1e2038 calc(var(--dark-level) * 1%));
 }
 
 .theme-toggle {
@@ -773,4 +778,12 @@ tr:last-child td {
 
 td.cmds {
   width: 46%;
+}
+
+/* Brightness slider: sets the dark level in the dark theme and the light level in the light theme. */
+.theme-level {
+  display: inline-block;
+  width: 72px;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
