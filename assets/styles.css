@@ -243,9 +243,9 @@ a:hover {
 
 .sidebar {
   position: sticky;
-  /* Where it starts on load: the 83px header plus the layout's 30px top padding. */
-  top: 113px;
-  max-height: calc(100vh - 129px);
+  /* Below the sticky header, which is about 83px tall with the logo. */
+  top: 100px;
+  max-height: calc(100vh - 116px);
   overflow-y: auto;
   align-self: start;
   border: 1px solid var(--line);
