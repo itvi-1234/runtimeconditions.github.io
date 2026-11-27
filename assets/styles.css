@@ -158,6 +158,13 @@ a:hover {
   white-space: nowrap;
 }
 
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 56px;
+  flex: none;
+}
+
 .top-links {
   display: flex;
   flex-wrap: wrap;
