@@ -16,6 +16,7 @@
           <a href="https://github.com/runtimeconditions/spec/blob/main/docs/sixth-draft.md" data-tip="Read the latest draft of the specification"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h6"/></svg><span>Current Draft</span></a>
           <a href="https://github.com/runtimeconditions/rc-demos/blob/main/README.md" data-tip="Run Runtime Conditions end to end on your own machine"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg><span>Run Demo</span></a>
           <a href="reference.html" data-tip="See where each part of this guide comes from in the source repositories"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15"/><path d="M15 6v15"/></svg><span>Source Map</span></a>
+          <a href="https://extensions.runtimeconditions.io/" data-tip="Browse every extension and its Go, Python, TypeScript and Java packages"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg><span>Registry</span></a>
           <a href="https://github.com/runtimeconditions" data-tip="Browse the Runtime Conditions repositories on GitHub"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span>GitHub</span></a>
           <a href="https://cloud-native.slack.com/archives/C0C0R4M65FZ" data-tip="Join the conversation on the CNCF Slack"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 9h16"/><path d="M4 15h16"/><path d="M10 3L8 21"/><path d="M16 3l-2 18"/></svg><span>Slack</span></a>
         </nav>
@@ -43,11 +44,13 @@
         <p class="chapter-label">Chapter 9</p>
         <h1 class="page-title">Frequently asked questions.</h1>
         <p class="intro">
-          Two questions that come up as soon as people see a profile.
+          Questions that come up as soon as people see a profile. Select a question to see its answer.
         </p>
 
-        <section class="section" id="compose">
-          <h2>How is this different from Docker Compose?</h2>
+        <div class="faq-list">
+        <details class="faq-item" id="compose">
+          <summary><h2>How is this different from Docker Compose?</h2></summary>
+          <div class="faq-body">
           <p class="short">A <code>compose.yaml</code> says how an app is run today. A profile says what the app needs, so a platform team can decide how to provide it.</p>
           <div class="table-wrap">
             <table>
@@ -61,10 +64,59 @@
               </tbody>
             </table>
           </div>
-        </section>
+          </div>
+        </details>
 
-        <section class="section" id="own-catalog">
-          <h2>Can a company write its own catalog of extensions?</h2>
+        <details class="faq-item" id="configmap">
+          <summary><h2>How is this different from a Kubernetes ConfigMap?</h2></summary>
+          <div class="faq-body">
+          <p class="short">A ConfigMap holds the values a workload reads at runtime, for one namespace in one cluster. A profile holds no values: it says what the workload needs and which names it reads them from. The two work at different steps, so a platform can read the profile, provide what it asks for, and then write the ConfigMap that carries the values.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th></th><th>ConfigMap</th><th>Runtime Conditions Profile</th></tr></thead>
+              <tbody>
+<tr><td><strong>What it holds</strong></td><td>Concrete values, such as <code>REDIS_URL: redis://cache.prod:6379</code></td><td>The need and the names, such as a <code>cache</code> Condition with engine <code>redis</code>, read from <code>REDIS_URL</code>. No values</td></tr>
+<tr><td><strong>Who writes it</strong></td><td>The platform or ops team, by hand or with Helm or Kustomize, once per environment</td><td>A profiler, from declarations in the workload's code</td></tr>
+<tr><td><strong>Scope</strong></td><td>One namespace in one cluster. Dev, test and production each need their own</td><td>One file per workload version, the same in every environment, and not tied to Kubernetes</td></tr>
+<tr><td><strong>Does it say what is needed?</strong></td><td>No. A key maps to a string. Nothing says the value must point to Redis, which version, or which API operations the app calls</td><td>Yes. The Condition kind, interface type, engine, API operations, and alternative ways to pass the values (<code>REDIS_URL</code>, or <code>REDIS_HOST</code> and <code>REDIS_PORT</code>)</td></tr>
+<tr><td><strong>Secrets</strong></td><td>Not meant for them. Passwords and tokens go in a separate Secret</td><td>Nothing to hide, because it holds no values</td></tr>
+<tr><td><strong>When something is missing</strong></td><td>The pod starts anyway, and the app fails when it reads an empty or wrong variable</td><td>The profile is checked before deployment, and a missing Condition is reported with a reason</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="short">Here is how the two fit together. The profile declares the cache and the variable it is read from:</p>
+          <div class="example">
+            <div class="example-title"><span>In the profile: the need</span></div>
+            <pre><code>conditions:
+  - name: request-cache
+    kind: cache
+    interface:
+      type: key_value
+      engine: redis
+    configuration:
+      env:
+        - property: url
+          name: REDIS_URL</code></pre>
+          </div>
+          <p class="short">The platform reads it, creates or finds a Redis cache in that environment, and writes the value under the name the profile asked for:</p>
+          <div class="example">
+            <div class="example-title"><span>Written by the platform: the value</span></div>
+            <pre><code>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: request-logger-http
+data:
+  REDIS_URL: redis://cache.prod:6379</code></pre>
+          </div>
+          <div class="note">
+            <p>A ConfigMap can be an output of a profile, but it cannot replace one: the values only make sense once someone knows what the workload needs. That knowledge is what the profile writes down.</p>
+          </div>
+          </div>
+        </details>
+
+        <details class="faq-item" id="own-catalog">
+          <summary><h2>Can a company write its own catalog of extensions?</h2></summary>
+          <div class="faq-body">
           <p class="short">
             Yes. An extension is a YAML document with its own id, so a company can define its own, as the <a href="https://github.com/runtimeconditions/spec/tree/main/examples/extensions/aws-object-store">AWS Object Store</a> example does. Our first-party extensions are one catalog among others, in the <a href="https://github.com/runtimeconditions/extensions/tree/main/catalog">extensions repository</a>.
           </p>
@@ -77,7 +129,9 @@
           <p class="short">
             The rules for writing one are in the <a href="https://github.com/runtimeconditions/spec/blob/main/docs/guides/extension-authoring.md">extension authoring guide</a>, and <a href="extensions.html">Extensions</a> shows what an extension owns.
           </p>
-        </section>
+          </div>
+        </details>
+        </div>
 
         <nav class="page-nav" aria-label="Page navigation">
           <a href="reference.html">Previous: Reference</a>
@@ -93,5 +147,48 @@
       </div>
     </footer>
     <script src="assets/syntax.js" defer></script>
+    <script>
+      // Open the question a link points to, such as faq.html#own-catalog.
+      const openFromHash = () => {
+        const target = location.hash && document.getElementById(location.hash.slice(1));
+        if (target instanceof HTMLDetailsElement) {
+          target.open = true;
+          target.scrollIntoView();
+        }
+      };
+      openFromHash();
+      window.addEventListener("hashchange", openFromHash);
+
+      // Slide each answer open and closed instead of jumping.
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      for (const item of document.querySelectorAll(".faq-item")) {
+        const summary = item.querySelector("summary");
+        const body = item.querySelector(".faq-body");
+        let running = null;
+        summary.addEventListener("click", (event) => {
+          if (reduceMotion.matches || !body.animate) return;
+          event.preventDefault();
+          if (running) running.cancel();
+          const opening = !item.open;
+          if (opening) item.open = true;
+          const full = body.scrollHeight;
+          const start = running ? body.offsetHeight : opening ? 0 : full;
+          const end = opening ? full : 0;
+          body.style.overflow = "hidden";
+          running = body.animate(
+            [
+              { height: `${start}px`, opacity: opening ? 0 : 1 },
+              { height: `${end}px`, opacity: opening ? 1 : 0 },
+            ],
+            { duration: opening ? 350 : 280, easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+          );
+          running.onfinish = () => {
+            if (!opening) item.open = false;
+            body.style.overflow = "";
+            running = null;
+          };
+        });
+      }
+    </script>
   </body>
 </html>
